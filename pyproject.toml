@@ -1,0 +1,157 @@
+[project]
+name = "explabs-platform"
+version = "0.1.0"
+description = "Hosted Experiential platform for building and serving trace-backed models."
+readme = "README.md"
+license = "LicenseRef-Proprietary"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    # Platform retains legacy workspace cleanup until D-004, so it owns E2B
+    # directly instead of depending on an obsolete engine extra.
+    "e2b>=2.31,<3",
+    # BYOK Bedrock builds a tenant-scoped boto session (explicit credentials),
+    # so Platform owns the SDK directly rather than relying on an engine import.
+    "boto3>=1.40",
+    # The engine is consumed ONLY as an exact-pinned PyPI release: the hosted
+    # gateway ships released, immutable, wheel-backed versions, never a git
+    # revision. Needing unreleased behavior means cutting an Experiential
+    # release first (enforced by explabs/deploy_guards_test.py).
+    "experiential==0.5.4",
+    # Experiential owns the compiled Rust gateway data plane separately from
+    # its Python control-plane package. The worker imports exp_gateway_native
+    # directly (metrics snapshot), so the platform pins the exact wheel too
+    # rather than relying on experiential's >=0.1.4,<0.2 transitive range.
+    "exp-gateway-native==0.1.4",
+    "httpx>=0.28.0",
+    "numpy>=2.0.0",
+    "openai>=3.2,<4",
+    # The /v1/messages acceptance and e2e scenarios drive the gateway with the
+    # official Anthropic client, mirroring how openai proves the OpenAI lanes.
+    "anthropic>=1.0,<2",
+    "packaging>=24.0",
+    # The gateway worker's hot path calls the gateway_* SQL functions over a
+    # direct sync connection pool (explabs/gateway/db.py), so the pool extra
+    # is a runtime dependency, not tooling.
+    "psycopg[binary,pool]>=3.2.0",
+    "pydantic>=2.11.0",
+    # Domain verification (E2 SSO substrate) performs real DNS TXT lookups;
+    # dnspython is the typed resolver (no subprocess dig, per repo policy).
+    "dnspython>=2.6",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.9",
+    "supabase>=2.0.0",
+    "uvicorn>=0.32.0",
+    # uvicorn's "auto" loop/parser factories pick these up in every server the
+    # platform runs — the api /v1 edge, the gateway worker's embedded fallback,
+    # and the load harness's provider (which pins itself back to asyncio/h11 to
+    # keep the benchmark floor constant). Measured on the gateway viral ladder.
+    "uvloop>=0.21",
+    "httptools>=0.6",
+    # The /v1 edge relay (explabs/api/routes/serving_gateway.py) streams every
+    # serving request to the gateway worker over aiohttp; httpx remains for the
+    # non-hot-path clients (its per-request model cost ~1ms of the edge hop).
+    "aiohttp>=3.12",
+    "modal>=1.0",
+]
+
+[project.scripts]
+explabs-agent-sessions = "explabs.agent_sessions.cli:main"
+explabs-api = "explabs.api:main"
+explabs-gateway-worker = "explabs.gateway.worker:main"
+
+[build-system]
+# setuptools 77 is the first release that accepts a string project.license
+# (PEP 639); 69-76 reject it, so this floor is what the license fields above
+# need to build at all.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.14.0",
+    "ty>=0.0.1a21",
+]
+
+[tool.uv]
+package = true
+config-settings = { editable_mode = "compat" }
+# NOTE: experiential and exp-gateway-native resolve from PyPI only. Earlier
+# revisions pinned both to a git commit via [tool.uv.sources] and compiled the
+# PyO3 crate in a Rust builder stage; exp-gateway-native now ships prebuilt
+# manylinux abi3 wheels, so no Rust toolchain appears in any image. Do not
+# reintroduce a git source for either package.
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["explabs*"]
+
+[tool.ty.environment]
+# Resolve the first-party `explabs` package from this checkout, not from the
+# editable install (an opaque runtime import hook) or any sibling worktree
+# this tree may be nested under.
+python = ".venv"
+root = ["."]
+
+[tool.ty.src]
+respect-ignore-files = true
+exclude = [
+    # Local scratch worktrees nested under the checkout are not part of the project.
+    ".worktrees/",
+    ".work/",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "A002",
+    "ANN401",
+    "ARG002",
+    "ARG001",
+    "COM812",
+    "D203",
+    "D213",
+    "E501",
+    "EM102",
+    "FBT001",
+    "FBT002",
+    "PLC0415",
+    "PLR0913",
+    "PLR2004",
+    "S105",
+    "S603",
+    "S608",
+    "T201",
+    "TC001",
+    "TC002",
+    "TC003",
+    "TRY003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*_test.py" = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["explabs"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["explabs", "scripts"]
+python_files = ["*_test.py"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require a running local Supabase stack",
+]

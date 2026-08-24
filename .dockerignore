@@ -1,0 +1,20 @@
+.git
+.work
+.worktrees
+.venv
+apps/web/.next
+apps/web/node_modules
+apps/web/test-results
+node_modules
+workspace
+artifacts
+docker/.env
+docker/.env.*
+# Per-deploy dotenvs (bearer keys, database credentials). A preview deploy builds
+# its images from a checkout that already holds .preview/pr-<n>/, so keep that
+# key material out of the build context and off every image layer.
+.preview
+__pycache__
+.pytest_cache
+.ruff_cache
+.ty

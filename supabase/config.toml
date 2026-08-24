@@ -1,0 +1,95 @@
+project_id = "explabs-platform"
+
+[api]
+enabled = true
+port = 54331
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54332
+shadow_port = 54330
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54339
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+# Seed scripts pass the admin credentials and optional provider keys as psql
+# variables, which CLI auto-seeding cannot do. Keep it disabled and use
+# scripts/seed_supabase_local.sh or the preview branch seeding script instead.
+[db.seed]
+enabled = false
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54333
+
+[inbucket]
+enabled = true
+port = 54334
+smtp_port = 54335
+pop3_port = 54336
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:8020"
+# /auth/callback is listed so invite emails and OAuth redirects may land on
+# the web app's callback route. GoTrue-level signup stays enabled: account
+# creation is gated app-side (app_settings.signups_enabled + org_invitations).
+additional_redirect_urls = ["http://127.0.0.1:8020", "http://127.0.0.1:8020/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+
+# Invited signups auto-login after setting a password: the tokened invite
+# link already proves inbox ownership, so a second confirm-your-email round
+# trip would only stall onboarding. Pinned off explicitly so hosted projects
+# do not drift into requiring it.
+[auth.email]
+enable_confirmations = false
+
+# The default email login is an emailed 6-digit code (/auth/otp +
+# /auth/otp/verify). Both templates email login can fire carry the code:
+# magic_link for existing accounts, confirmation for the account the code
+# request itself creates. Hosted projects set the same content in the
+# Supabase dashboard (Auth -> Emails); locally Inbucket captures it.
+[auth.email.template.magic_link]
+subject = "Your sign-in code"
+content_path = "./supabase/templates/signin-code.html"
+
+[auth.email.template.confirmation]
+subject = "Your sign-in code"
+content_path = "./supabase/templates/signin-code.html"
+
+# OAuth providers. Shipped disabled so local stacks and preview branches boot
+# without provider secrets; to activate locally, flip `enabled` and set the
+# SUPABASE_AUTH_* env vars (see .env.example). Hosted projects configure
+# providers in the Supabase dashboard instead. The authorize callback each
+# provider console must allowlist is <SUPABASE_URL>/auth/v1/callback.
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+
+[auth.external.github]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GITHUB_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GITHUB_SECRET)"
+
+[storage]
+enabled = true
+file_size_limit = "1GiB"
+
+[edge_runtime]
+enabled = true
+inspector_port = 54338
+
+[analytics]
+enabled = true
+port = 54337
+backend = "postgres"

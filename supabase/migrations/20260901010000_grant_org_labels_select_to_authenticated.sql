@@ -1,0 +1,23 @@
+-- HOTFIX for #770 (yc-status-via-label): grant SELECT on org_labels to the
+-- `authenticated` role.
+--
+-- 20260901000000 added the RLS policy org_labels_select_yc_member ("authenticated
+-- may read their own org's `yc` label"), but 20260831000000 had
+--   revoke all on table public.org_labels from public, anon, authenticated, service_role
+-- and re-granted only service_role. An RLS policy does NOT grant table-level
+-- privileges, and no migration ever granted org_labels to `authenticated`
+-- (there is no blanket `grant ... on all tables ... to authenticated` anywhere).
+-- So every member-facing YC read that runs as the `authenticated` role —
+-- orgIsYcCompany() in apps/web/lib/billing/tool-accounts-server.ts, awaited by
+-- the /credits page's Promise.all, and the tool-account gate — hit
+-- "permission denied for table org_labels" and 500'd for every signed-in user.
+-- The old yc_claims table worked only because it kept Supabase's default
+-- authenticated grant; the new label surface lost it.
+--
+-- Neither the fake DB nor the pgtap tests caught this: both exercise org_labels
+-- as superuser, never as `authenticated`. A lives-as-authenticated regression
+-- is added in explabs_yc_launch_grant.test.sql.
+--
+-- Safe: the existing policy scopes SELECT to key = 'yc' AND the caller's own
+-- org (public.member_org_ids()), so no other label or org is exposed.
+grant select on public.org_labels to authenticated;

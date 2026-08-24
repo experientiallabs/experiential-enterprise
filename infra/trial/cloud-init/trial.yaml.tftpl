@@ -1,0 +1,115 @@
+#cloud-config
+# Copyright (c) 2026 Experiential Labs. All rights reserved.
+#
+# One shared cloud-init template for the AWS, Azure, and GCP trial roots
+# (rendered via templatefile()). Inputs:
+#   public_repo_url  git URL of the public trial repo
+#   trial_tag        snapshot tag to clone (trial-YYYYMMDD)
+#   trial_env_b64    base64 KEY=VALUE file with the terraform-minted secrets
+#   caddyfile_b64    base64 rendered infra/trial/proxy/Caddyfile.tftpl
+#
+# Boot sequence: write config -> install docker CE + compose v2 from the
+# official docker apt repo -> shallow-clone the tagged trial repo to
+# /opt/explabs -> enable the explabs-trial systemd unit, which runs
+# infra/trial/scripts/first_boot.sh on this and every later boot (env minting,
+# integration_stack.sh up, one smoke pass, Caddy, then a hard gate on the
+# public HTTPS endpoint). Shell $${...} below is escaped from terraform's
+# template interpolation.
+
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+
+write_files:
+  # Terraform-minted values first_boot.sh consumes. Secrets: root-only. The
+  # same values also live in the terraform state (documented trial caveat).
+  - path: /etc/explabs-trial/trial.env
+    owner: root:root
+    permissions: "0600"
+    encoding: b64
+    content: ${trial_env_b64}
+
+  # Rendered Caddy config; mounted read-only into the caddy container by
+  # infra/trial/proxy/compose.proxy.yml.
+  - path: /etc/explabs-trial/Caddyfile
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${caddyfile_b64}
+
+  # Boot driver unit. first_boot.sh is idempotent and never resets the stack,
+  # so it re-runs on every boot and is what brings the stack and proxy back
+  # after a VM restart. It ends in a hard gate on the public HTTPS endpoint,
+  # so a failed exit here means the advertised URL does not work.
+  - path: /etc/systemd/system/explabs-trial.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Experiential Labs trial stack boot driver
+      Wants=network-online.target
+      After=network-online.target docker.service
+      Requires=docker.service
+      # Self-healing, bounded. One attempt is roughly 20 minutes (stack
+      # convergence + the driver's 15-minute HTTPS gate + RestartSec), so five
+      # starts give a transient certificate failure about 90 minutes to clear
+      # on its own. After that the unit stays `failed`, which is the operator
+      # signal: `systemctl status explabs-trial`.
+      StartLimitIntervalSec=21600
+      StartLimitBurst=5
+
+      [Service]
+      # Type=simple rather than oneshot ONLY because Restart= is unavailable
+      # for oneshot units, and a failed certificate issuance must retry rather
+      # than report a broken endpoint as a successful install. Nothing is
+      # ordered after this unit, so simple-type's immediate "started" costs
+      # nothing, and it also removes the need for a start timeout: first boot
+      # pulls images, can build from source, and waits out the gateway
+      # worker's first catalog build, which together run tens of minutes.
+      # RemainAfterExit keeps a completed run visible as `active (exited)`
+      # instead of `inactive (dead)`.
+      Type=simple
+      RemainAfterExit=yes
+      Restart=on-failure
+      RestartSec=120
+      ExecStart=/opt/explabs/infra/trial/scripts/first_boot.sh
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Docker CE + compose v2 plugin from the official docker apt repository.
+  - |
+    set -eu
+    if ! command -v docker >/dev/null 2>&1; then
+      echo "[cloud-init] installing docker CE from download.docker.com" >&2
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      . /etc/os-release
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $${VERSION_CODENAME} stable" \
+        > /etc/apt/sources.list.d/docker.list
+      apt-get update
+      DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        docker-ce docker-ce-cli containerd.io \
+        docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+    fi
+  # Shallow clone of the published snapshot tag.
+  # runcmd scripts execute under /bin/sh (dash on Ubuntu), so plain set -eu.
+  - |
+    set -eu
+    if [ ! -d /opt/explabs/.git ]; then
+      echo "[cloud-init] cloning ${public_repo_url} @ ${trial_tag}" >&2
+      git clone --depth 1 --branch '${trial_tag}' '${public_repo_url}' /opt/explabs
+    fi
+    chmod +x /opt/explabs/infra/trial/scripts/*.sh /opt/explabs/scripts/*.sh
+  # Hand off to the boot driver without blocking cloud-init's final stage;
+  # progress lands in /var/log/explabs-trial-install.log and the journal.
+  - systemctl daemon-reload
+  - systemctl enable explabs-trial.service
+  - systemctl start --no-block explabs-trial.service

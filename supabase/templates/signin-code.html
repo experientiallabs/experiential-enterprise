@@ -1,0 +1,11 @@
+<!-- The email behind the default email login (/auth/otp): code only, no link.
+     The form's UX is "enter the 6-digit code", so the mail carries exactly
+     that; a link would need a token_hash landing route the app deliberately
+     does not have. Used for both GoTrue template slots that email login can
+     fire (magic_link for existing accounts, confirmation for accounts the
+     code request creates). Hosted projects must set the same content in the
+     Supabase dashboard - GoTrue's mailer is dashboard-configured, not code. -->
+<h2>Your sign-in code</h2>
+<p>Enter this code on the Experiential Labs sign-in page:</p>
+<p style="font-size: 28px; font-weight: 700; letter-spacing: 6px; font-family: monospace;">{{ .Token }}</p>
+<p>The code expires in one hour. If you didn't request it, ignore this email.</p>
