@@ -1,0 +1,97 @@
+# Copyright (c) 2026 Experiential Labs. All rights reserved.
+#
+# Caddy path routing for the one-click trial VM. Rendered by each terraform
+# root via templatefile() and shipped to the instance through cloud-init.
+#
+# Routing decision (verified against docker/compose.yml and apps/web/app/api):
+#   /v1*     -> api:8080  (the gateway edge, the customer serving surface)
+#   /health* -> api:8080  (unauthenticated backend health)
+#   all else -> web:3000  (the dashboard, INCLUDING /api/*: the Next.js app
+#                          serves its own browser-called /api routes such as
+#                          /api/orgs, /api/keys, /api/gateway/usage, and
+#                          /api/health, and they collide with the FastAPI
+#                          control paths, so /api cannot be routed to the api
+#                          container without breaking every signed-in
+#                          dashboard page. The FastAPI /api control surface
+#                          stays VM-internal on port 18080.)
+#
+# TLS (always HTTPS; port 80 only redirects and solves HTTP-01). tls_mode is
+# the operator's decision and always wins; the domain only chooses WHAT the
+# certificate is issued for. The four combinations:
+#   domain + trusted     -> publicly trusted Let's Encrypt certificate for
+#                           the domain.
+#   domain + self-signed -> Caddy's internal CA for the domain. No ACME at
+#                           all, which is the point: this is the mode for a
+#                           network where Let's Encrypt cannot reach ports
+#                           80/443, so forcing ACME here would leave the
+#                           endpoint unusable.
+#   no domain + trusted  -> publicly trusted Let's Encrypt certificate for
+#                           the bare public IP (GA 2026-01-15), issued under
+#                           the ACME shortlived profile (160h validity,
+#                           HTTP-01) and renewed automatically about every
+#                           4.4 days. Needs caddy >= 2.10.1 and ports 80/443
+#                           reachable from the internet. We deliberately
+#                           avoid sslip.io-style wildcard DNS: it is not on
+#                           the Public Suffix List, so every trial would
+#                           share one Let's Encrypt rate bucket.
+#   no domain + self-signed -> Caddy's internal CA on the bare public IP.
+# Either self-signed mode is encrypted but not publicly trusted: export the
+# caddy container's root certificate
+# (/data/caddy/pki/authorities/local/root.crt) and trust it on clients
+# instead of skipping verification.
+#
+# default_sni is set only where the site address is a bare IP, because an IP
+# client sends no SNI. Both domain variants rely on the client's SNI, and all
+# four share the one routing block at the bottom.
+%{ if domain != "" ~}
+%{ if tls_mode == "trusted" ~}
+{
+	email ${acme_email}
+}
+
+${domain} {
+%{ else ~}
+${domain} {
+	# Self-signed internal CA: trust its root.crt on clients. No ACME, so no
+	# contact email and no HTTP-01 challenge; Caddy still serves the automatic
+	# HTTP-to-HTTPS redirect for this host on port 80.
+	tls internal
+%{ endif ~}
+%{ else ~}
+%{ if tls_mode == "trusted" ~}
+{
+	email ${acme_email}
+	# Clients that connect by bare IP send no SNI; serve the IP certificate.
+	default_sni ${public_ip}
+}
+
+${public_ip} {
+	# Short-lived profile: the only ACME profile that issues for IPs.
+	tls {
+		issuer acme {
+			profile shortlived
+		}
+	}
+%{ else ~}
+{
+	# Clients that connect by bare IP send no SNI; serve the IP certificate.
+	default_sni ${public_ip}
+}
+
+:80 {
+	redir https://${public_ip}{uri} 308
+}
+
+https://${public_ip} {
+	# Self-signed internal CA: trust its root.crt on clients.
+	tls internal
+%{ endif ~}
+%{ endif ~}
+	@backend path /v1 /v1/* /health /health/*
+	handle @backend {
+		reverse_proxy ${api_upstream}
+	}
+	handle {
+		reverse_proxy ${web_upstream}
+	}
+}

@@ -1,0 +1,64 @@
+# Copyright (c) 2026 Experiential Labs. All rights reserved.
+#
+# Trial VM overlay for docker/compose.yml: adds Caddy as the single public
+# entry (ports 80/443; everything else stays loopback-published or
+# stack-internal) and points the deployment's public-URL env at the Caddy
+# origin. Always run MERGED with the base file and the same project name, so
+# Caddy joins the stack network and the service overrides apply:
+#
+#   docker compose --project-name "$EXPLABS_STACK_PROJECT_NAME" \
+#     --env-file docker/.env \
+#     -f docker/compose.yml -f infra/trial/proxy/compose.proxy.yml \
+#     up -d --no-build supabase-auth web caddy
+#
+# infra/trial/scripts/first_boot.sh issues exactly that command after
+# scripts/integration_stack.sh has the stack up. EXPLABS_PUBLIC_ORIGIN is
+# written into docker/.env at first boot and is always https
+# (https://<domain> or https://<public-ip>).
+services:
+  caddy:
+    # 2.11: bare-IP Let's Encrypt issuance (certmagic 0.24) landed in 2.10.1,
+    # and 2.11.x adds the IP TLS-ALPN and IPv6 fixes.
+    image: caddy:2.11
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Rendered from infra/trial/proxy/Caddyfile.tftpl by terraform and written by
+      # cloud-init; routes /v1* and /health* to api:8080, all else to web:3000.
+      - ${EXPLABS_TRIAL_CADDYFILE:-/etc/explabs-trial/Caddyfile}:/etc/caddy/Caddyfile:ro
+      # Persist /data (ACME account, certificates, the internal CA) across
+      # container replacements. Losing it forces fresh Let's Encrypt orders
+      # against the per-identifier rate limits, which bites hard with the
+      # shortlived profile's ~4.4-day renewal cadence.
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [explabs]
+
+  web:
+    environment:
+      # What copyable snippets and /api/cli/config advertise as the serving
+      # base URL. Caddy routes <origin>/v1/* to the api container, so the
+      # public origin is the correct customer-facing base here (the base file
+      # advertises the loopback host port, which only works on the VM itself).
+      EXPLABS_PUBLIC_BACKEND_URL: ${EXPLABS_PUBLIC_ORIGIN:-http://127.0.0.1:18080}
+
+  supabase-auth:
+    environment:
+      # Auth email links should point at the public dashboard origin instead
+      # of the base file's localhost URL. Emails still land in the stack's
+      # mailpit (never the network), but the links they carry must resolve for
+      # a trial user's browser.
+      GOTRUE_SITE_URL: ${EXPLABS_PUBLIC_ORIGIN:-http://localhost:3300}
+
+networks:
+  # Same name expression as the base file, so the merged config resolves to
+  # one network and Caddy can reach api:8080 and web:3000 by service name.
+  explabs:
+    name: ${EXPLABS_STACK_PROJECT_NAME:-explabs-local}-network
+
+volumes:
+  caddy-data:
+  caddy-config:

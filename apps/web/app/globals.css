@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+:root {
+  /* Core palette */
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --surface: #ffffff;
+  --surface-subtle: #f5f5f5;
+  --ink: #0a0a0a;
+  --muted: #737373;
+  --muted-2: #a3a3a3;
+  --line: #ededed;
+  --line-strong: #e0e0e0;
+  --success: #22a050;
+  --success-soft: #f0fdf4;
+  --danger: #dc3c3c;
+  --danger-soft: #fef2f2;
+  --warning: #b45309;
+  --warning-soft: #fff9ea;
+  --purple: #7850c8;
+  --purple-soft: #faf5ff;
+  /* Primary interactive accent (selection, active nav, focus, primary buttons).
+     Green, aligned with the resolutelabs.com brand accent. */
+  --accent: #168a49;
+  --accent-soft: #eafaf0;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Interactive states */
+  --hover: #efefef;
+  --active: #f1f1f1;
+
+  /* Onboarding dark theme */
+  --onboard-bg: #0f0f0f;
+  --onboard-surface: #1a1a1a;
+  --onboard-text: #ededed;
+  --onboard-muted: #6a6a6a;
+  --onboard-border: rgba(255, 255, 255, 0.1);
+  --onboard-input-bg: rgba(255, 255, 255, 0.03);
+
+  /* Extended neutrals: two quieter ink steps and a sunken panel fill for dense
+     surfaces (tooltips, tiles, inset wells). */
+  --ink-soft: color-mix(in srgb, var(--ink) 62%, #ffffff);
+  --ink-faint: #8a8a8a;
+  --surface-sunk: color-mix(in srgb, var(--line) 45%, #ffffff);
+  /* Decorative gold, not a status color: the
+     recommended-model star. --accent-amber-soft is its pale wash for the
+     recommended pill background. */
+  --accent-amber: #f5a623;
+  --accent-amber-soft: color-mix(in srgb, var(--accent-amber) 16%, #ffffff);
+}
+
+/* 10px uppercase tracked mono label: section eyebrows, stat labels, status chips. */
+.mono-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* One quick side-to-side shake for a blocked step-forward click: the button
+   says "something here still needs you" without a modal. Replays via a React
+   key remount. */
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.animate-wiggle {
+  animation: wiggle 320ms ease-in-out;
+}
+
+/* Scrollable but chromeless: single-line rows (tile tag pills) that must keep a
+   uniform height, so the scrollbar is hidden while wheel/trackpad panning stays. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layered so text-color utilities on anchors win the cascade (unlayered
+   rules would beat @layer utilities). */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+/* Bottom padding for pages that GROW past the viewport. Their content
+   overflows the shell's h-full content box (AppShell.tsx), which strands
+   <main>'s own bottom padding mid-content — the wrapper itself cannot grow,
+   because viewport-fill pages (Logs, Credits, Playground, the catalog) need
+   its definite height for their contained scrolling. Scrolling pages carry
+   this class instead; ONE definition, mirroring the shell's py clamp, so the
+   value cannot drift per page. */
+@layer utilities {
+  .page-bottom-pad {
+    padding-bottom: clamp(1.25rem, 4vh, 1.875rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-skeleton {
+    animation: none;
+  }
+}

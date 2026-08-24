@@ -1,0 +1,53 @@
+.venv/
+node_modules/
+.next/
+apps/web/.next/
+apps/web/test-results/
+apps/web/playwright-report/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ty/
+demo_artifacts/
+demo_artifacts_external/
+demo_recording/
+artifacts/
+workspace/
+!apps/web/app/api/agents/**/workspace/
+!apps/web/app/api/agents/**/workspace/**
+supabase/.branches/
+supabase/.temp/
+.DS_Store
+
+# Generated proof artifacts (screenshots, traces, console/page dumps)
+.playwright-mcp/
+
+# Local wmh harness root (runtime-built model artifacts and wmh-generated
+# telemetry settings with anonymous ids).
+.wmh/
+
+# Local scratch worktrees nested under the checkout.
+.worktrees/
+.work/
+
+# Per-deploy dotenvs hold database credentials and bearer keys — never commit.
+.preview/
+
+# OpenTofu/Terraform local state and generated Google OIDC credentials. Remote
+# state is mandatory for managed Experiential Cloud environments.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+gha-creds-*.json

@@ -1,0 +1,86 @@
+/* Docs-scoped theming. Everything here is fenced behind [data-docs-theme] (an
+   attribute only app/docs/layout.tsx renders), so no rule can leak into the
+   rest of the app. Light mode IS the app palette — no overrides needed — and
+   dark mode re-points the same tokens the components already consume, derived
+   from the website's dark family (#0f0f0f backgrounds, mint interactive
+   accent, translucent white hairlines). */
+
+[data-docs-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f0f0f;
+  --foreground: #ededed;
+  --surface: #161616;
+  --surface-subtle: #1c1c1c;
+  --surface-sunk: #131313;
+  --ink: #ededed;
+  --ink-soft: rgba(237, 237, 237, 0.72);
+  --ink-faint: #8a8a8a;
+  --muted: #a3a3a3;
+  --muted-2: #6a6a6a;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --accent: #b6f7c8;
+  --accent-soft: rgba(182, 247, 200, 0.14);
+  --hover: rgba(255, 255, 255, 0.06);
+  --active: rgba(255, 255, 255, 0.09);
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --purple: #c4b5fd;
+  --purple-soft: rgba(196, 181, 253, 0.14);
+}
+
+/* Restrained syntax palette for docs code blocks, themeable because CodeTabs
+   renders prism tokens with classes only (no inline colors). */
+[data-docs-theme] {
+  --docs-code-comment: var(--muted-2);
+  --docs-code-string: #168a49;
+  --docs-code-keyword: #7850c8;
+  --docs-code-literal: #b45309;
+  --docs-code-punctuation: var(--muted);
+}
+
+[data-docs-theme="dark"] {
+  --docs-code-comment: var(--muted-2);
+  --docs-code-string: #b6f7c8;
+  --docs-code-keyword: #c4b5fd;
+  --docs-code-literal: #fbbf24;
+  --docs-code-punctuation: var(--muted);
+}
+
+.docs-code .token.comment,
+.docs-code .token.prolog,
+.docs-code .token.doctype,
+.docs-code .token.cdata {
+  color: var(--docs-code-comment);
+  font-style: italic;
+}
+
+.docs-code .token.string,
+.docs-code .token.attr-value,
+.docs-code .token.char,
+.docs-code .token.url {
+  color: var(--docs-code-string);
+}
+
+.docs-code .token.keyword,
+.docs-code .token.builtin,
+.docs-code .token.function,
+.docs-code .token.class-name {
+  color: var(--docs-code-keyword);
+}
+
+.docs-code .token.number,
+.docs-code .token.boolean,
+.docs-code .token.constant,
+.docs-code .token.property {
+  color: var(--docs-code-literal);
+}
+
+.docs-code .token.punctuation,
+.docs-code .token.operator {
+  color: var(--docs-code-punctuation);
+}

@@ -1,0 +1,2396 @@
+[
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:19:34.521093Z",
+    "score": 38.8,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf?id=Ti67584b98"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-gpt-4-0613",
+  "release_url": "https://openai.com/index/function-calling-and-other-api-updates/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:39:23.351851Z",
+    "score": 57.57,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/54c15a3033686e7999aecd2740c5a7c4-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:39:23.351851Z",
+    "score": 26.45,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/54c15a3033686e7999aecd2740c5a7c4-Paper-Conference.pdf"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-jais-30b-chat-2",
+  "release_url": "https://ai.azure.com/explore/models/jais-30b-chat/version/2/registry/azureml-core42/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:39:23.351851Z",
+    "score": 26.45,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/54c15a3033686e7999aecd2740c5a7c4-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:39:23.351851Z",
+    "score": 57.57,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/54c15a3033686e7999aecd2740c5a7c4-Paper-Conference.pdf"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/inception42/jais-30b-chat-v3",
+  "model_slug": "azure_openai-jais-30b-chat-3",
+  "release_url": "https://ai.azure.com/explore/models/jais-30b-chat/version/3/registry/azureml-core42/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 63.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 27.77777777777778,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-70B-Instruct/results_2025-02-13T18-27-04.338360.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 37.4,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.9,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1276.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-70b-instruct-6",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 63.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 27.77777777777778,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-70B-Instruct/results_2025-02-13T18-27-04.338360.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 37.4,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.9,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1276.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-70b-instruct-7",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 63.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 27.77777777777778,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-70B-Instruct/results_2025-02-13T18-27-04.338360.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 37.4,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.9,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1276.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-70b-instruct-8",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 63.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 27.77777777777778,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-70B-Instruct/results_2025-02-13T18-27-04.338360.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 37.4,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 82.9,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1276.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-70b-instruct-9",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 68.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 45.5,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 25.757575757575758,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-8B-Instruct/results_2024-06-17T11-25-17.966751.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 26.7,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 76.8,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1223.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-8b-instruct-6",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 68.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 45.5,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 25.757575757575758,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-8B-Instruct/results_2024-06-17T11-25-17.966751.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 26.7,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 76.8,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1223.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-8b-instruct-7",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 68.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 45.5,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 25.757575757575758,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-8B-Instruct/results_2024-06-17T11-25-17.966751.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 26.7,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 76.8,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1223.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-8b-instruct-8",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 68.4,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 45.5,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 25.757575757575758,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/results/blob/main/meta-llama/Meta-Llama-3-8B-Instruct/results_2024-06-17T11-25-17.966751.json"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 26.7,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 76.8,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:45:45.852728Z",
+    "score": 1223.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text?styleControl=off"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3-8b-instruct-9",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 83.6,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 66.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 48.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 87.5,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 1293.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text/overall"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3.1-70b-instruct-2",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3-1/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 83.6,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 66.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 48.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 87.5,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 1293.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text/overall"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3.1-70b-instruct-3",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3-1/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 83.6,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 66.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 48.0,
+    "source": "vendor",
+    "source_url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 87.5,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/README.md"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T20:50:47.094538Z",
+    "score": 1293.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text/overall"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-meta-llama-3.1-70b-instruct-4",
+  "release_url": "https://ai.meta.com/blog/meta-llama-3-1/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 47.116023936170215,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 32.82828282828283,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 29.6,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 60.400293,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-128k-instruct"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3-medium-128k-instruct-3",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 47.116023936170215,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 32.82828282828283,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 29.6,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 60.400293,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-128k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-128k-instruct-4",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 47.116023936170215,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 32.82828282828283,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 29.6,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 60.400293,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-128k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-128k-instruct-5",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 47.116023936170215,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 32.82828282828283,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 29.6,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 60.400293,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-128k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-128k-instruct-6",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 47.116023936170215,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 32.82828282828283,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 29.6,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 60.400293,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-128k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-128k-instruct-7",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 55.7,
+    "source": "paper",
+    "source_url": "https://papers.neurips.cc/paper_files/paper/2024/file/ad236edc564f3e3156e1b2feafb99a24-Paper-Datasets_and_Benchmarks_Track.pdf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 34.84848484848485,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 30.3,
+    "source": "paper",
+    "source_url": "https://livebench.ai/livebench.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 64.22714,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-4k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:13:30.724287Z",
+    "score": 1198.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-4k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-4k-instruct-3",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 55.7,
+    "source": "paper",
+    "source_url": "https://papers.neurips.cc/paper_files/paper/2024/file/ad236edc564f3e3156e1b2feafb99a24-Paper-Datasets_and_Benchmarks_Track.pdf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 34.84848484848485,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 29.3,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 64.22714,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-4k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1198.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-4k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-4k-instruct-4",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 55.7,
+    "source": "paper",
+    "source_url": "https://papers.neurips.cc/paper_files/paper/2024/file/ad236edc564f3e3156e1b2feafb99a24-Paper-Datasets_and_Benchmarks_Track.pdf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 34.84848484848485,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 29.3,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 64.22714,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-4k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1198.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-4k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-4k-instruct-5",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 55.7,
+    "source": "paper",
+    "source_url": "https://papers.neurips.cc/paper_files/paper/2024/file/ad236edc564f3e3156e1b2feafb99a24-Paper-Datasets_and_Benchmarks_Track.pdf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 34.84848484848485,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-medium-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 29.3,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 64.22714,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-medium-4k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1198.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-medium-4k-instruct",
+  "model_slug": "azure_openai-phi-3-medium-4k-instruct-6",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 43.86,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 35.858585858585855,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 25.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 59.763317,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1129.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-128k-instruct-10",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 43.86,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 35.858585858585855,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 25.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 59.763317,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1129.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-128k-instruct-11",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 43.86,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 35.858585858585855,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-128k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 25.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 59.763317,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-mini-128k-instruct"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 1129.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-128k-instruct-12",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 25.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-128k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-128k-instruct-13",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 30.808080808080806,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 24.5,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 54.767461,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-mini-4k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-4k-instruct-10",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 30.808080808080806,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 24.5,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf/8bdd6d5c12eea747cc94c5b82561dd4b95801927.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:10:49.162299Z",
+    "score": 54.767461,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/contents/viewer/default/train?q=microsoft%2FPhi-3-mini-4k-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-4k-instruct-11",
+  "release_url": "https://azure.microsoft.com/en-us/blog/announcing-phi-3-fine-tuning-new-generative-ai-models-and-other-azure-ai-updates-to-empower-organizations-to-customize-and-scale-ai-applications/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 40.21775265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 30.80808080808081,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 48.98336414048059,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 1143.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-4k-instruct-13",
+  "release_url": "https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 40.21775265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 30.80808080808081,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 48.98336414048059,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 1143.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-4k-instruct-14",
+  "release_url": "https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 40.21775265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 30.80808080808081,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 48.98336414048059,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-mini-4k-instruct-details"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 1143.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct",
+  "model_slug": "azure_openai-phi-3-mini-4k-instruct-15",
+  "release_url": "https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 44.90525265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 28.28282828282828,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 58.78003696857671,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-small-128k-instruct",
+  "model_slug": "azure_openai-phi-3-small-128k-instruct-3",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 44.90525265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 28.28282828282828,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 58.78003696857671,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-small-128k-instruct",
+  "model_slug": "azure_openai-phi-3-small-128k-instruct-4",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 44.90525265957447,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 28.28282828282828,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:09:25.706260Z",
+    "score": 58.78003696857671,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/open-llm-leaderboard/microsoft__Phi-3-small-128k-instruct-details"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3-small-128k-instruct",
+  "model_slug": "azure_openai-phi-3-small-128k-instruct-5",
+  "release_url": "https://azure.microsoft.com/en-us/blog/new-models-added-to-the-phi-3-family-available-on-microsoft-azure/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 47.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.3,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.4,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 40.0,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 57.75,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct/commit/8550d05c5910cc6cd10cd98335a7a6b694e0a0c0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-mini-instruct-2",
+  "release_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 47.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.3,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.4,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 40.0,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 57.75,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct/commit/8550d05c5910cc6cd10cd98335a7a6b694e0a0c0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-mini-instruct-3",
+  "release_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 47.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.3,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.4,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 40.0,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 57.75,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct/commit/8550d05c5910cc6cd10cd98335a7a6b694e0a0c0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-mini-instruct-4",
+  "release_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 47.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.3,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 27.4,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 40.0,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2026/file/01498f17142547dadb60999c39bd0a09-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 57.75,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct/commit/8550d05c5910cc6cd10cd98335a7a6b694e0a0c0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-mini-instruct-6",
+  "release_url": "https://huggingface.co/microsoft/Phi-3.5-mini-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 36.8,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 34.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "aime-2025",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 6.7,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 59.5,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.25,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-MoE-instruct/blob/refs%2Fpr%2F8/README.md"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-moe-instruct-2",
+  "release_url": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/announcing-the-availability-of-phi-3-5-moe-in-azure-ai-studio-and-github/4256278"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 36.8,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 34.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "aime-2025",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 6.7,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 59.5,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.25,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-MoE-instruct/blob/refs%2Fpr%2F8/README.md"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-moe-instruct-3",
+  "release_url": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/announcing-the-availability-of-phi-3-5-moe-in-azure-ai-studio-and-github/4256278"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 36.8,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 34.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "aime-2025",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 6.7,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 59.5,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:14:00.520864Z",
+    "score": 69.25,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-MoE-instruct/blob/refs%2Fpr%2F8/README.md"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-moe-instruct-4",
+  "release_url": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/announcing-the-availability-of-phi-3-5-moe-in-azure-ai-studio-and-github/4256278"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T21:21:21.316850Z",
+    "score": 36.8,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T21:21:21.316850Z",
+    "score": 34.1,
+    "source": "paper",
+    "source_url": "https://openreview.net/notes/edits/attachment?id=adEvCYzvx5&name=pdf"
+   },
+   {
+    "benchmark": "aime-2025",
+    "retrieved_at": "2026-08-23T21:21:21.316850Z",
+    "score": 6.7,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T21:21:21.316850Z",
+    "score": 59.5,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2512.16248"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T21:21:21.316850Z",
+    "score": 69.25,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-MoE-instruct/blob/refs%2Fpr%2F8/README.md"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "azure_openai-phi-3.5-moe-instruct-5",
+  "release_url": "https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/announcing-the-availability-of-phi-3-5-moe-in-azure-ai-studio-and-github/4256278"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23",
+    "score": 1412,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text/overall-no-style-control"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/thinkingmachines/Inkling-Small-NVFP4",
+  "model_slug": "fireworks-models-inkling-small",
+  "release_url": "https://thinkingmachines.ai/news/inkling-small/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmmu",
+    "retrieved_at": "2026-08-23T23:13:54.743635Z",
+    "score": 43.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/microsoft/Phi-3.5-vision-instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/microsoft/Phi-3.5-vision-instruct",
+  "model_slug": "fireworks-models-phi-3-vision-128k-instruct",
+  "release_url": "https://fireworks.ai/models/fireworks/phi-3-vision-128k-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T23:15:36.655644Z",
+    "score": 15.0,
+    "source": "paper",
+    "source_url": "https://arxiv.org/html/2412.15115"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T23:15:36.655644Z",
+    "score": 12.6,
+    "source": "paper",
+    "source_url": "https://arxiv.org/html/2412.15115"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T23:15:36.655644Z",
+    "score": 27.9,
+    "source": "paper",
+    "source_url": "https://arxiv.org/html/2412.15115"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "fireworks-models-qwen2p5-0p5b-instruct",
+  "release_url": "https://fireworks.ai/models/fireworks/qwen2p5-0p5b-instruct"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 52.2,
+    "source": "vendor",
+    "source_url": "https://alizila.oss-us-west-1.aliyuncs.com/uploads/2025/09/Media-Release-Alibaba-Cloud-Unveils-Strategic-Roadmaps-for-the-Next-Generation-AI-Innovations-0924.pdf"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 11.1,
+    "source": "paper",
+    "source_url": "https://www.lgresearch.ai/data/cdn/upload/K-EXAONE_Technical_Report.pdf"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23",
+    "score": 1419,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text/overall-no-style-control"
+   },
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 87.48,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/RedHatAI/Qwen3-235B-A22B-Instruct-2507-NVFP4"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 94.2,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/RedHatAI/Qwen3-235B-A22B-Instruct-2507-NVFP4"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/Qwen/Qwen3-235B-A22B-Instruct-2507-FP8",
+  "model_slug": "fireworks-models-qwen3-235b-a22b-instruct-2507",
+  "release_url": "https://fireworks.ai/models/fireworks/qwen3-235b-a22b-instruct-2507"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 86.9,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct"
+   },
+   {
+    "benchmark": "aime-2026",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 88.33,
+    "source": "leaderboard",
+    "source_url": "https://matharena.ai/models/qwen_qwen3_30b_a3b_2507"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 8.7,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-23T23:32:19.725781Z",
+    "score": 90.75,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/RedHatAI/Qwen3-30B-A3B-Thinking-2507-quantized.w8a8"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-23",
+    "score": 31.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct"
+   }
+  ],
+  "huggingface_url": "https://huggingface.co/Qwen/Qwen3-30B-A3B-Thinking-2507-FP8",
+  "model_slug": "fireworks-models-qwen3-30b-a3b-thinking-2507",
+  "release_url": "https://fireworks.ai/models/fireworks/qwen3-30b-a3b-thinking-2507"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T23:39:01.872249Z",
+    "score": 78.41,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/stepfun-ai/Step-3.7-Flash-NVFP4/discussions/1"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "fireworks-models-step-3p7-flash-nvfp4",
+  "release_url": "https://github.com/stepfun-ai/Step-3.7-Flash/blob/main/README.md#nvfp4--mtp"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 88.7,
+    "source": "vendor",
+    "source_url": "https://github.com/openai/simple-evals/blob/main/README.md"
+   },
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 71.2,
+    "source": "leaderboard",
+    "source_url": "https://crfm.stanford.edu/2025/03/20/helm-capabilities.html"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 53.1,
+    "source": "vendor",
+    "source_url": "https://github.com/openai/simple-evals/blob/main/README.md"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 53.8,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/e4a46394ba5378b3f9a186a5b4c650d1-Paper-Conference.pdf"
+   },
+   {
+    "benchmark": "aime-2025",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 11.67,
+    "source": "leaderboard",
+    "source_url": "https://matharena.ai/models/openai_gpt_4o"
+   },
+   {
+    "benchmark": "lmarena-elo",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 1335.0,
+    "source": "lmarena",
+    "source_url": "https://arena.ai/leaderboard/text"
+   },
+   {
+    "benchmark": "mmmu",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 69.1,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/learning-to-reason-with-llms/"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-23T23:57:26.101441Z",
+    "score": 87.80386042367584,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/datasets/vector-institute/llm-eval-results"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "gpt-4o",
+  "release_url": "https://openai.com/index/gpt-4o-and-more-tools-to-chatgpt-free/"
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 88.9,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meituan-longcat/LongCat-2.0"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 90.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meituan-longcat/LongCat-2.0"
+   },
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 70.8,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/meituan-longcat/LongCat-2.0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "longcat-2.0",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 31.4,
+    "source": "leaderboard",
+    "source_url": "https://benchgecko.ai/benchmark/hf-mmlu-pro"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 56.3,
+    "source": "leaderboard",
+    "source_url": "https://benchgecko.ai/benchmark/hf-ifeval"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "magnum-v4-72b",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 75.2,
+    "source": "paper",
+    "source_url": "https://arxiv.org/html/2608.00146"
+   },
+   {
+    "benchmark": "math-500",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 81.0,
+    "source": "paper",
+    "source_url": "https://arxiv.org/html/2606.01774v2"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "mercury-2",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 65.8,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "mimo-v2.5",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 68.4,
+    "source": "vendor",
+    "source_url": "https://mimo.xiaomi.com/mimo-v2-5-pro"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "mimo-v2.5-pro",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 89.1,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-Text-01"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "minimax-01",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 55.6,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M1-40k"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:19:52.512419Z",
+    "score": 7.2,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-M1-40k"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "minimax-m1",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:30:28.101912Z",
+    "score": 90.3,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-9B-v2"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "nemotron-nano-9b-v2-free",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:30:28.101912Z",
+    "score": 79.0,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/introducing-chatgpt-pro/"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o1-pro-batch",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 84.0,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf?id=6WgflzYQpf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 77.2,
+    "source": "vendor",
+    "source_url": "https://github.com/openai/simple-evals/blob/main/README.md"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 49.3,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/openai-o3-mini/"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 13.4,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2501.14249"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o3-mini-high",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 84.0,
+    "source": "paper",
+    "source_url": "https://openreview.net/pdf?id=6WgflzYQpf"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 77.2,
+    "source": "vendor",
+    "source_url": "https://github.com/openai/simple-evals/blob/main/README.md"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 49.3,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/openai-o3-mini/"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 13.4,
+    "source": "paper",
+    "source_url": "https://arxiv.org/pdf/2501.14249"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o3-mini-high-batch",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 84.0,
+    "source": "vendor",
+    "source_url": "https://images.ctfassets.net/j22is2dtoxu1/intercom-img-d2a88e92982920441ad45097/c4ca6ecf8a2d06c64dd0014e4341614d/image.png"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o3-pro-batch",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 74.4,
+    "source": "leaderboard",
+    "source_url": "https://smartmanoj.github.io/livebench-leaderboard/"
+   },
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 27.5,
+    "source": "leaderboard",
+    "source_url": "https://www.tbench.ai/leaderboard/terminal-bench/1.0"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o4-mini-batch",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 81.4,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 68.1,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 78.72,
+    "source": "leaderboard",
+    "source_url": "https://smartmanoj.github.io/livebench-leaderboard/"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o4-mini-high",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 81.4,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 68.1,
+    "source": "vendor",
+    "source_url": "https://openai.com/index/introducing-gpt-5-for-developers/"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-24T05:36:45.604280Z",
+    "score": 78.72,
+    "source": "leaderboard",
+    "source_url": "https://smartmanoj.github.io/livebench-leaderboard/"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "o4-mini-high-batch",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 85.3,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 84.2,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 69.2,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "aime-2026",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 91.0,
+    "source": "vendor",
+    "source_url": "https://qwen.ai/blog?id=qwen3.6-35b-a3b"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 22.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "mmmu",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 81.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 91.9,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   },
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 40.5,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "qwen3.5-flash-02-23",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu-pro",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 87.8,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 88.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 76.4,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "aime-2026",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 91.3,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 28.7,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "mmmu",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 85.0,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "ifeval",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 92.6,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   },
+   {
+    "benchmark": "terminal-bench",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 52.5,
+    "source": "huggingface",
+    "source_url": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "qwen3.5-plus-02-15",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "swe-bench-verified",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 76.7,
+    "source": "leaderboard",
+    "source_url": "https://epoch.ai/benchmarks/swe-bench-verified"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "qwen3.6-max-preview",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "gpqa-diamond",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 90.4,
+    "source": "vendor",
+    "source_url": "https://qwen.ai/blog?id=qwen3.6"
+   },
+   {
+    "benchmark": "livebench",
+    "retrieved_at": "2026-08-24T05:51:01.952436Z",
+    "score": 68.9,
+    "source": "leaderboard",
+    "source_url": "https://www.rank.ai/rankings/models/livebench-model-capability"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "qwen3.6-plus",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "hle",
+    "retrieved_at": "2026-08-24T05:51:47.003266Z",
+    "score": 21.1,
+    "source": "vendor",
+    "source_url": "https://www.perplexity.ai/hub/blog/introducing-perplexity-deep-research"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "sonar-deep-research",
+  "release_url": null
+ },
+ {
+  "benchmarks": [
+   {
+    "benchmark": "mmlu",
+    "retrieved_at": "2026-08-24T06:07:51.949408Z",
+    "score": 77.0,
+    "source": "paper",
+    "source_url": "https://proceedings.iclr.cc/paper_files/paper/2025/file/3e2c12c1a41af7c19c5b38e0837a52d1-Paper-Conference.pdf"
+   }
+  ],
+  "huggingface_url": null,
+  "model_slug": "wizardlm-2-8x22b",
+  "release_url": null
+ }
+]
