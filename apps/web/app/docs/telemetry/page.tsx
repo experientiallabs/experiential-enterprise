@@ -105,7 +105,7 @@ export default function TelemetryDocsPage() {
           <Code>otel-genai</Code>, <Code>otlp</Code>, <Code>langfuse</Code>,{" "}
           <Code>langsmith</Code>, <Code>phoenix</Code>, <Code>braintrust</Code>,{" "}
           <Code>mastra</Code>, <Code>posthog</Code>, <Code>chat-json</Code>). The
-          response is a two-hour, path-bound signed upload URL and token — never
+          response is a two-hour, path-bound signed upload URL and token, never
           service credentials. PUT the exact raw file bytes to{" "}
           <Code>signed_url</Code>, then{" "}
           <Code>POST /api/orgs/&lt;org_id&gt;/telemetry/traces/&lt;ingest_id&gt;/finalize</Code>{" "}

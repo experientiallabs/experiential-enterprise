@@ -5,7 +5,10 @@ const isPlatformAdmin = vi.hoisted(() => vi.fn());
 const listAdminRecommendedModels = vi.hoisted(() => vi.fn());
 const replaceAdminRecommendedModels = vi.hoisted(() => vi.fn());
 
+const revalidateModelsCatalog = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/auth/admin", () => ({ isPlatformAdmin }));
+vi.mock("@/lib/models-catalog/server", () => ({ revalidateModelsCatalog }));
 vi.mock("@/lib/data-source", async () => {
   const actual = await vi.importActual<typeof import("@/lib/data-source")>("@/lib/data-source");
   return {
@@ -61,6 +64,14 @@ describe("the admin recommended-models routes", () => {
       "claude-fable-5",
     ]);
     expect(await response.json()).toEqual({ models: MODELS });
+  });
+
+  it("busts the shared catalog cache after a replace, never on a rejected body", async () => {
+    await PUT(putRequest({ slugs: ["ox-alpha"] }));
+    expect(revalidateModelsCatalog).toHaveBeenCalledTimes(1);
+    revalidateModelsCatalog.mockClear();
+    await PUT(putRequest({ slugs: [] }));
+    expect(revalidateModelsCatalog).not.toHaveBeenCalled();
   });
 
   it("refuses to replace for a non-admin", async () => {

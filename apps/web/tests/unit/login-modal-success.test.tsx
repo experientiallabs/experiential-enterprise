@@ -67,7 +67,7 @@ describe("login modal first-key reveal", () => {
     const success = await screen.findByTestId("login-success-step");
     await waitFor(() => expect(success.querySelector("code")).toHaveTextContent(/^xpl_a{40}$/));
     expect(screen.getByRole("button", { name: "Copy API key" })).toBeInTheDocument();
-    expect(screen.getByText("Shown once, copy it now.")).toBeInTheDocument();
+    expect(screen.getByText("This key won't be shown again. Copy it now.")).toBeInTheDocument();
   });
 
   it("puts the $20 free credits front and center alongside the confetti and key", async () => {

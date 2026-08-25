@@ -476,6 +476,148 @@ def test_list_drops_promotion_for_invisible_model(
     assert body["promotions"] == []
 
 
+def _yc_scoped_promotions() -> list[JsonObject]:
+    """One audience-less promo and one limited to orgs labeled ``yc``."""
+    return [
+        {
+            "id": "promo-open",
+            "label": "everyone",
+            "providers": [],
+            "family_keys": [],
+            "audience_labels": [],
+            "per_org_cap_micro_usd": 1,
+            "discount_cap_micro_usd": 0,
+            "percent_off": 0,
+            "active": True,
+            "display_order": 0,
+            "created_at": "2026-08-01T00:00:00+00:00",
+        },
+        {
+            "id": "promo-yc",
+            "label": "yc half off",
+            "providers": [],
+            "family_keys": [],
+            "audience_labels": ["yc"],
+            "per_org_cap_micro_usd": 0,
+            "discount_cap_micro_usd": 50_000_000_000,
+            "percent_off": 50,
+            "active": True,
+            "display_order": 1,
+            "created_at": "2026-08-01T00:00:00+00:00",
+        },
+    ]
+
+
+def _promo_labels(body: JsonObject) -> list[str]:
+    """Labels of the returned promotions, in display order."""
+    return [str(cast("JsonObject", promo)["label"]) for promo in cast("list", body["promotions"])]
+
+
+def test_audience_promotion_hidden_from_anonymous_viewers(
+    catalog: FakeSupabaseClient, anonymous: TestClient
+) -> None:
+    """A label-scoped promo never shows signed out: the discount would not apply."""
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    assert _promo_labels(anonymous.get("/api/models").json()) == ["everyone"]
+
+
+def test_audience_promotion_hidden_from_unlabeled_org(
+    catalog: FakeSupabaseClient, org1: TestClient
+) -> None:
+    """An org without the required label sees only audience-less promotions."""
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    catalog.tables["org_labels"] = []
+    assert _promo_labels(org1.get("/api/models").json()) == ["everyone"]
+
+
+def test_audience_promotion_shown_to_labeled_org(
+    catalog: FakeSupabaseClient, org1: TestClient
+) -> None:
+    """An org carrying every required label sees the scoped promotion."""
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    catalog.tables["org_labels"] = [
+        {"id": "lbl-1", "org_id": ORG_ID, "key": "yc", "created_at": "2026-08-01T00:00:00+00:00"}
+    ]
+    assert _promo_labels(org1.get("/api/models").json()) == ["everyone", "yc half off"]
+
+
+def test_audience_narrows_to_the_acting_org(catalog: FakeSupabaseClient, org1: TestClient) -> None:
+    """The acting org decides: a qualified OTHER org must not leak the promo.
+
+    Audience enforcement is per-org at charge time, and the workspace acts as
+    one org. A viewer whose org-1 carries the label, acting as org-2, is not
+    shown the promo (org-2's traffic pays full price); acting as org-1 they
+    are; naming an org outside their memberships is refused.
+    """
+    catalog.tables["organization_members"].append(
+        {"org_id": OTHER_ORG_ID, "user_id": ACTOR_ID, "role": "admin"}
+    )
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    catalog.tables["org_labels"] = [
+        {"id": "lbl-1", "org_id": ORG_ID, "key": "yc", "created_at": "2026-08-01T00:00:00+00:00"}
+    ]
+    acting_unlabeled = org1.get(f"/api/models?audience_org={OTHER_ORG_ID}").json()
+    assert _promo_labels(acting_unlabeled) == ["everyone"]
+    acting_labeled = org1.get(f"/api/models?audience_org={ORG_ID}").json()
+    assert _promo_labels(acting_labeled) == ["everyone", "yc half off"]
+    foreign = org1.get("/api/models?audience_org=org-elsewhere")
+    assert foreign.status_code == 403
+
+
+def test_owner_org_read_carries_full_promotion_set(
+    catalog: FakeSupabaseClient, org1: TestClient
+) -> None:
+    """owner=org narrows the MODELS, not the promotions.
+
+    The storefront's signed-in hydrate uses this read to swap in the viewer's
+    audience-resolved promotions, so promos over public (non-org) models must
+    survive the owner filter.
+    """
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    catalog.tables["org_labels"] = [
+        {"id": "lbl-1", "org_id": ORG_ID, "key": "yc", "created_at": "2026-08-01T00:00:00+00:00"}
+    ]
+    body = org1.get("/api/models?owner=org").json()
+    assert all(
+        cast("JsonObject", entry["model"])["owning_org_id"] is not None
+        for entry in cast("list[JsonObject]", body["models"])
+    )
+    assert _promo_labels(body) == ["everyone", "yc half off"]
+
+
+def test_audience_promotion_shown_to_platform_admin(
+    catalog: FakeSupabaseClient, operator: TestClient
+) -> None:
+    """Operators see every promotion: they manage the deployment's promos."""
+    catalog.tables["model_promotions"] = _yc_scoped_promotions()
+    catalog.tables["model_promotion_models"] = [
+        {"promotion_id": "promo-open", "model_id": GPT_ID, "slug": "gpt-5.5"},
+        {"promotion_id": "promo-yc", "model_id": GPT_ID, "slug": "gpt-5.5"},
+    ]
+    catalog.tables["org_labels"] = []
+    assert _promo_labels(operator.get("/api/models").json()) == ["everyone", "yc half off"]
+
+
 def _completed_event(index: int, *, created_at: str) -> JsonObject:
     """One completed gateway usage event for the gpt-5.5/openai route."""
     return {

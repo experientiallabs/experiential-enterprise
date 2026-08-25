@@ -74,7 +74,7 @@ where I launch you.`
   opencode: {
     title: "OpenCode",
     body: (_web, api) => `Write the provider block into this project's opencode.json (or
-~/.config/opencode/opencode.json if I prefer global — ask):
+~/.config/opencode/opencode.json if I prefer global, ask):
   {"provider": {"explabs": {"npm": "@ai-sdk/openai-compatible",
    "name": "Experiential Labs",
    "options": {"baseURL": "${api}/v1", "apiKey": "{env:EXPLABS_API_KEY}"},
@@ -107,7 +107,7 @@ function indent(body: string, spaces: number): string {
 }
 
 function preamble(web: string, api: string): string {
-  return `I pasted this into you myself — wire THIS coding agent up to my Experiential
+  return `I pasted this into you myself, wire THIS coding agent up to my Experiential
 Labs gateway, so my model calls route through ${api} and show up in my usage.
 
 Ground rules: never print my full key (first 8 characters at most), ask me
@@ -126,7 +126,7 @@ instead. Print what you're doing at each step.
 
 function closing(web: string): string {
   return `4. Verify end to end. Make one tiny completion with the surface you configured
-   ("reply with the single word: ok", small max output) — via your own next
+   ("reply with the single word: ok", small max output), via your own next
    model call if you now route through the gateway, otherwise via curl with my
    key. Then tell me it landed and that I can watch every call at
    ${web}/telemetry.

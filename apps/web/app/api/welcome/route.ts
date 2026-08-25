@@ -6,6 +6,7 @@ import { isOrgAdmin } from "@/lib/auth/admin-orgs";
 import { requireAuthorizedOrgIds } from "@/lib/auth/orgs";
 import { createServerSupabaseClient, requireAuthenticatedUser } from "@/lib/auth/server";
 import { readLaunchGrantUsd } from "@/lib/billing/launch-grant";
+import { orgIsYcCompany } from "@/lib/billing/tool-accounts-server";
 import { getDataSource } from "@/lib/data-source";
 import { jsonError, jsonOk } from "@/lib/http";
 
@@ -54,9 +55,12 @@ export async function GET(): Promise<Response> {
     // cumulative granted counter, which also counts Stripe top-ups (the same
     // rule as the sidebar greeting, PR #685). billableUsd still gates the
     // celebration: an org that has already spent is not a fresh welcome.
-    const [budget, launchGrantUsd] = await Promise.all([
+    const [budget, launchGrantUsd, isYcCompany] = await Promise.all([
       getDataSource().getOrgBudget(org.id),
-      readLaunchGrantUsd(supabase, org.id)
+      readLaunchGrantUsd(supabase, org.id),
+      // Cosmetic co-branding only — a tag-read failure must degrade to the
+      // default modal, never fail the whole welcome read.
+      orgIsYcCompany(org.id).catch(() => false)
     ]);
     return jsonOk(
       {
@@ -65,6 +69,8 @@ export async function GET(): Promise<Response> {
           ? { keyPrefix: data[0].key_prefix, keySuffix: data[0].key_suffix }
           : null,
         canManageKeys,
+        // Drives the welcome modal's YC co-branding (the custom-path variant).
+        isYcCompany,
         credit: {
           grantedUsd: launchGrantUsd ?? 0,
           billableUsd: budget.billable_spend_usd

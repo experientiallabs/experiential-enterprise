@@ -38,7 +38,7 @@ export default function ConnectTracesPage() {
           </h1>
           <p className="text-sm text-onboard-muted">
             Paste this into your coding agent. It creates your account, asks which observability
-            provider you use, and brings your existing LLM traces onto the platform as telemetry —
+            provider you use, and brings your existing LLM traces onto the platform as telemetry, 
             no router, no Project.
           </p>
         </div>

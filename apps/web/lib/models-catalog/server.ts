@@ -21,6 +21,7 @@
 
 import { revalidateTag, unstable_cache } from "next/cache";
 
+import { resolveActiveOrgForTelemetry } from "@/lib/active-org";
 import { getAuthenticatedUser } from "@/lib/auth/server";
 import { DataSourceNotFoundError, DataSourceRequestError } from "@/lib/errors";
 
@@ -106,18 +107,29 @@ export async function fetchModelList(): Promise<ModelList> {
   if (user === null) {
     return base;
   }
-  const overlay = await pageCatalog(user.id, { owner: "org" });
+  // Tolerant resolution: a signed-in viewer with no active org still gets the
+  // catalog; their audience scope is simply unnarrowed (backend falls back to
+  // any-org-qualifies, which such a viewer has none of anyway).
+  const activeOrg = await resolveActiveOrgForTelemetry();
+  const overlay = await pageCatalog(user.id, {
+    owner: "org",
+    audienceOrgId: activeOrg?.id
+  });
+  // Promotions come from the OVERLAY read: it carries the actor header plus
+  // the ACTING org, so the backend resolves audience-scoped promotions (org
+  // labels) for the org the viewer is acting as, not any org they belong to.
+  // The cached base holds the anonymous set, which withholds label-scoped
+  // promos the viewer may actually qualify for.
+  const promotions = overlay.promotions ?? base.promotions;
   if (overlay.models.length === 0) {
-    return base;
+    return { ...base, promotions };
   }
   const baseIds = new Set(base.models.map((entry) => entry.model.id));
   const models = [
     ...base.models,
     ...overlay.models.filter((entry) => !baseIds.has(entry.model.id))
   ];
-  // Promotions are population-level; keep the shared base's set (org-owned
-  // overlay rows are never promotional).
-  return { models, promotions: base.promotions, total: models.length, limit: base.limit, offset: 0 };
+  return { models, promotions, total: models.length, limit: base.limit, offset: 0 };
 }
 
 /**
@@ -129,8 +141,11 @@ export async function fetchModelList(): Promise<ModelList> {
  * root cause of the /models load flash. Returns an empty list for a viewer with
  * no custom models. Not cached: org-scoped rows must never enter a shared cache.
  */
-export async function fetchOrgOwnedModels(actorId: string): Promise<ModelList> {
-  return pageCatalog(actorId, { owner: "org" });
+export async function fetchOrgOwnedModels(
+  actorId: string,
+  audienceOrgId?: string
+): Promise<ModelList> {
+  return pageCatalog(actorId, { owner: "org", audienceOrgId });
 }
 
 /** One model's detail (row, visible deployments, default waterfall chain). */
@@ -152,7 +167,7 @@ export async function fetchModelDetail(slug: string): Promise<ModelDetail | null
 /** The full catalog for one viewer scope, pages joined past the API's cap. */
 async function pageCatalog(
   actorId: string | null,
-  params: { owner?: "org" } = {}
+  params: { owner?: "org"; audienceOrgId?: string } = {}
 ): Promise<ModelList> {
   const first = await catalogGet<ModelList>(catalogPath(0, params), actorId);
   // Promotions are returned whole on every page (not paginated); the first page
@@ -181,13 +196,16 @@ async function pageCatalog(
   return { models, promotions, total: first.total, limit: CATALOG_PAGE_LIMIT, offset: 0 };
 }
 
-function catalogPath(offset: number, params: { owner?: "org" }): string {
+function catalogPath(offset: number, params: { owner?: "org"; audienceOrgId?: string }): string {
   const search = new URLSearchParams({ limit: String(CATALOG_PAGE_LIMIT) });
   if (offset > 0) {
     search.set("offset", String(offset));
   }
   if (params.owner !== undefined) {
     search.set("owner", params.owner);
+  }
+  if (params.audienceOrgId !== undefined) {
+    search.set("audience_org", params.audienceOrgId);
   }
   return `/api/models?${search.toString()}`;
 }

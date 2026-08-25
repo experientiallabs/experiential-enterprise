@@ -193,6 +193,10 @@ CANONICAL_ALIASES: dict[tuple[str, str], str] = {
     ("openai", "o3-pro-2025-06-10"): "o3-pro",
     ("openai", "o4-mini-2025-04-16"): "o4-mini",
     ("openai", "o4-mini-deep-research-2025-06-26"): "o4-mini-deep-research",
+    # Both the dated snapshot and the -latest pointer are the curated
+    # `omni-moderation` model; the seed routes both wires onto it.
+    ("openai", "omni-moderation-2024-09-26"): "omni-moderation",
+    ("openai", "omni-moderation-latest"): "omni-moderation",
     ("openrouter", "amazon/nova-lite-v1"): "bedrock-amazon.nova-lite-v1-0",
     ("openrouter", "amazon/nova-micro-v1"): "bedrock-amazon.nova-micro-v1-0",
     ("openrouter", "amazon/nova-pro-v1"): "bedrock-amazon.nova-pro-v1-0",

@@ -129,7 +129,7 @@ export default function BillingDocsPage() {
       <DocsSection id="exhausted" title="When you run out">
         <Prose>
           When your credit balance or a spend limit is exhausted, calls fail with{" "}
-          <Code>429 insufficient_quota</Code>; the message says which — a daily org
+          <Code>429 insufficient_quota</Code>; the message says which: a daily org
           or per-model cap, a budget, or your credits. It is not transient:
           retrying does not clear it.
         </Prose>

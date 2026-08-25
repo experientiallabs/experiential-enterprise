@@ -68,6 +68,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Annotated, LiteralString, Protocol
 
 import psycopg
+from exp.common.core.artifacts import JsonObject as ExpJsonObject
 from exp.common.core.artifacts import canonical_json_bytes, sha256_json
 from exp.common.models import (
     BillingSource,
@@ -1993,6 +1994,91 @@ class GatewayCatalogStateProvider(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class PricedAliasMetadata(PublishedAliasMetadata):
+    """exp's published listing fields extended with the reasoning rate.
+
+    ``PublishedAliasMetadata`` renders ``pricing`` with input/output/cached
+    micro-USD-per-million-tokens keys; the catalog also declares a reasoning
+    rate, published here in the same spelling so the extension object carries
+    every rate settlement can charge.
+    """
+
+    reasoning_micro_usd_per_million_tokens: int | None = None
+
+    def extension_fields(self) -> ExpJsonObject:
+        """Extend exp's rendering with the declared reasoning rate."""
+        fields = super().extension_fields()
+        if self.reasoning_micro_usd_per_million_tokens is not None:
+            raw = fields.get("pricing")
+            pricing = raw if isinstance(raw, dict) else {}
+            pricing["reasoning_micro_usd_per_million_tokens"] = (
+                self.reasoning_micro_usd_per_million_tokens
+            )
+            fields["pricing"] = pricing
+        return fields
+
+
+def listing_pricing_by_alias(
+    state: GatewayCatalogState,
+) -> dict[tuple[str, str], PricedAliasMetadata]:
+    """Map every served alias REVISION to its primary rung's catalog rates.
+
+    Keyed by ``(alias_name, revision_id)`` — the exact identity exp's listing
+    lookup presents — so an organization whose granted authority names an
+    org-scoped plan (its own custom model or org-specific revision) publishes
+    THAT plan's rates, never a same-named public plan's. The published rates
+    are the plan's primary rung — the deployment settlement freezes onto the
+    attempt for platform-funded traffic (exp's own ``published_metadata``
+    stays silent for multi-deployment pools; the platform deliberately
+    publishes the primary rung instead so waterfall models still carry the
+    list price of the route they normally dispatch). The plan's frozen
+    ``target_deployment_ids`` carry AUTHORED deployment aliases while
+    ``deployments_by_key`` is keyed by NORMALIZED deployment ids, so
+    resolution goes through the normalized pool exactly like the worker's
+    readiness probe, with the direct id lookup as the fallback for states
+    built without a normalized catalog. Only price fields are published —
+    capabilities and limits stay unclaimed. A rate the catalog does not
+    declare stays absent ("unknown"), never 0.
+    """
+    build = state.build
+    catalog_sha256 = build.catalog_sha256
+    if catalog_sha256 is None:
+        return {}
+    pools_by_id = (
+        {} if build.normalized is None else {pool.pool_id: pool for pool in build.normalized.pools}
+    )
+    pricing_by_alias: dict[tuple[str, str], PricedAliasMetadata] = {}
+    for plan in build.alias_plans:
+        deployments = state.deployments_by_key.get((plan.revision_id, catalog_sha256), {})
+        pool = pools_by_id.get(plan.target.pool_id)
+        candidate_ids = plan.target_deployment_ids if pool is None else tuple(pool.deployment_ids)
+        primary: ExactModelDeployment | None = None
+        for deployment_id in candidate_ids:
+            primary = deployments.get(deployment_id)
+            if primary is not None:
+                break
+        if primary is None:
+            continue
+        prices = primary.gateway.prices
+        if (
+            prices.input_micro_usd_per_million_tokens is None
+            and prices.output_micro_usd_per_million_tokens is None
+            and prices.cached_input_micro_usd_per_million_tokens is None
+            and prices.reasoning_micro_usd_per_million_tokens is None
+        ):
+            continue
+        pricing_by_alias[(plan.alias_name, plan.revision_id)] = PricedAliasMetadata(
+            input_micro_usd_per_million_tokens=prices.input_micro_usd_per_million_tokens,
+            output_micro_usd_per_million_tokens=prices.output_micro_usd_per_million_tokens,
+            cached_input_micro_usd_per_million_tokens=(
+                prices.cached_input_micro_usd_per_million_tokens
+            ),
+            reasoning_micro_usd_per_million_tokens=(prices.reasoning_micro_usd_per_million_tokens),
+        )
+    return pricing_by_alias
+
+
 class OrgAwareRouteResolver:
     """Resolve routes against the current state, substituting org BYOK variants.
 
@@ -2005,6 +2091,11 @@ class OrgAwareRouteResolver:
     def __init__(self, state_provider: GatewayCatalogStateProvider) -> None:
         """Bind the key-aware live state accessor."""
         self._state_provider = state_provider
+        # Per-generation listing pricing cache (published_metadata); rebuilt
+        # whenever the immutable state object swaps. Benign to race: a
+        # concurrent rebuild produces the identical map for the same state.
+        self._listing_pricing_state: GatewayCatalogState | None = None
+        self._listing_pricing: dict[tuple[str, str], PricedAliasMetadata] = {}
 
     def resolve_direct(self, authorization: AuthorizationSnapshot) -> GatewayRoute:
         """Resolve one direct route synchronously for the native data plane.
@@ -2072,18 +2163,30 @@ class OrgAwareRouteResolver:
     ) -> PublishedAliasMetadata | None:
         """Return catalog-backed listing fields for one granted public alias.
 
-        Delegates to the generation resolver for the authority's own catalog
-        key. The platform builds its resolvers without ``listing_pools``, so
-        this currently returns ``None`` (identity-only listing) and simply
-        starts publishing the moment the catalog build supplies them.
+        exp renders these as additive extension fields beside OpenAI's model
+        object on BOTH serving lanes: the Rust plane's ``/v1/models`` callback
+        (``NativeControlPlane.models``) and the Python fallback route each call
+        through this seam, so publishing here is the single place the listing
+        gains pricing. The generation resolver is consulted first (the
+        platform builds without ``listing_pools``, so it answers ``None``
+        today); otherwise the GRANTED REVISION's primary routed deployment
+        publishes its catalog rates — an org authority naming an org-scoped
+        plan gets that plan's rates, never a same-named public plan's —
+        pricing only, never invented capability or limit claims.
         """
         key = (revision_id, catalog_sha256)
         state = self._state_provider.state_for_key_if_loaded(key)
         if state is None:
             return None
-        return state.resolver.published_metadata(
+        published = state.resolver.published_metadata(
             alias=alias, revision_id=revision_id, catalog_sha256=catalog_sha256
         )
+        if published is not None:
+            return published
+        if state is not self._listing_pricing_state:
+            self._listing_pricing = listing_pricing_by_alias(state)
+            self._listing_pricing_state = state
+        return self._listing_pricing.get((alias, revision_id))
 
     @staticmethod
     def _substitute_org_variants(
@@ -2191,7 +2294,7 @@ class GatewayCatalogRefresher:
         """Bind the connection factory and credential sources.
 
         Args:
-            connect: Factory for short-lived direct Postgres connections.
+            connect: Factory for short-lived Postgres connections.
             environment: Worker environment; defaults to ``os.environ``.
             release: BYOK releaser; defaults to the sanctioned Vault RPC over
                 the refresh connection.

@@ -110,7 +110,7 @@ export function IdentitiesAccessPanel(props: IdentitiesAccessPanelProps) {
       {/* At xl the two org-wide budget cards share one row and one capped
           scrollport, so the identity tier below keeps its viewport share
           however many caps exist. Below xl they stack single-column and size
-          naturally — capping the stack would bury the second card below an
+          naturally, capping the stack would bury the second card below an
           inner fold; the identity grid's min-height floor pushes overflow
           into the main scroll instead. */}
       <div className="grid shrink-0 grid-cols-1 gap-4 xl:max-h-[30vh] xl:grid-cols-2 xl:overflow-y-auto">

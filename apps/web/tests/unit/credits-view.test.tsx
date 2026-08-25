@@ -85,12 +85,20 @@ describe("CreditsView", () => {
     stubFetchOk();
     await act(async () => {
       render(
-        <CreditsView {...BASE} canManageAlerts canTopUp initialReport={initial} orgId="org-1" />
+        <CreditsView
+          {...BASE}
+          canManageAlerts
+          canTopUp
+          initialReport={initial}
+          isYcCompany
+          orgId="org-1"
+        />
       );
     });
 
     // Default tab, in order: spend card, add-credits, balance squares, deals
-    // (add-credits sits ABOVE the provider squares — the product owner, 2026-08-23).
+    // (add-credits sits ABOVE the provider squares — the product owner, 2026-08-23). The
+    // deals section shows because this org carries the YC tag (isYcCompany).
     expect(screen.getByTestId("spend-overview")).toBeInTheDocument();
     expect(screen.getByTestId("provider-balances")).toBeInTheDocument();
     expect(screen.getByTestId("add-credits")).toBeInTheDocument();
@@ -115,6 +123,18 @@ describe("CreditsView", () => {
     expect(screen.queryByTestId("spend-overview")).not.toBeInTheDocument();
     expect(screen.queryByTestId("deals-section")).not.toBeInTheDocument();
     expect(screen.queryByTestId("add-credits")).not.toBeInTheDocument();
+  });
+
+  it("hides the YC deals section for an org without the YC tag", async () => {
+    stubFetchOk();
+    await act(async () => {
+      render(
+        <CreditsView {...BASE} canManageAlerts canTopUp initialReport={initial} orgId="org-1" />
+      );
+    });
+    // Overview tab renders, but the Bookface deals section is YC-only.
+    expect(screen.getByTestId("provider-balances")).toBeInTheDocument();
+    expect(screen.queryByTestId("deals-section")).not.toBeInTheDocument();
   });
 
   it("shows no tool accounts anywhere on the money page", async () => {

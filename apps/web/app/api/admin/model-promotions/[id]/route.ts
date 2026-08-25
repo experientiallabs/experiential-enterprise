@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isPlatformAdmin } from "@/lib/auth/admin";
 import { getDataSource } from "@/lib/data-source";
 import { jsonError } from "@/lib/http";
+import { revalidateModelsCatalog } from "@/lib/models-catalog/server";
 
 import { parsePromotionInput } from "../route";
 
@@ -28,6 +29,9 @@ export async function PUT(request: NextRequest, context: Context): Promise<Respo
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const promotion = await getDataSource().updateAdminModelPromotion(id, parsed.value);
+    // Promotions render on the shared cached public catalog; bust it so the
+    // change shows on the next read instead of waiting out the window.
+    revalidateModelsCatalog();
     return NextResponse.json(promotion);
   } catch (error) {
     return jsonError(error);
@@ -44,6 +48,7 @@ export async function DELETE(_request: NextRequest, context: Context): Promise<R
     }
     const { id } = await context.params;
     await getDataSource().deleteAdminModelPromotion(id);
+    revalidateModelsCatalog();
     return NextResponse.json({ ok: true });
   } catch (error) {
     return jsonError(error);

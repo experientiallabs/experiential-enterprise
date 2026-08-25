@@ -234,7 +234,7 @@ export function parseFireworksConfig(value: unknown): FireworksProviderConfig | 
   const accountId = typeof raw.account_id === "string" ? raw.account_id.trim() : "";
   if (accountId.length === 0 || accountId.length > 128) {
     return {
-      error: "The Fireworks account id is required — it is the account slug on fireworks.ai."
+      error: "The Fireworks account id is required, it is the account slug on fireworks.ai."
     };
   }
   return { account_id: accountId };
@@ -296,10 +296,10 @@ export function parseSpendSecret(
       error:
         provider === "anthropic"
           ? "That looks like an Anthropic inference key (sk-ant-api…), but the admin slot " +
-            "needs an ADMIN key (sk-ant-admin…) — the two key types are disjoint. The " +
+            "needs an ADMIN key (sk-ant-admin…), the two key types are disjoint. The " +
             "inference key belongs in the main API-key field."
           : "That looks like an OpenAI project/inference key (sk-…), but the admin slot " +
-            "needs an ADMIN key (sk-admin-…, scope api.usage.read) — the two key types " +
+            "needs an ADMIN key (sk-admin-…, scope api.usage.read), the two key types " +
             "are disjoint. The project key belongs in the main API-key field."
     };
   }
@@ -314,14 +314,14 @@ export function parseSpendSecret(
 export function mainSlotAdminKeyError(provider: ModelProvider, secret: string): string | null {
   if (provider === "anthropic" && secret.startsWith(ADMIN_KEY_PREFIXES.anthropic)) {
     return (
-      "That is an Anthropic ADMIN key (sk-ant-admin…), which cannot do inference — the " +
+      "That is an Anthropic ADMIN key (sk-ant-admin…), which cannot do inference, the " +
       "two key types are disjoint. Paste an inference API key (sk-ant-api…) here; the " +
       "admin key belongs in the optional admin-key field."
     );
   }
   if (provider === "openai" && secret.startsWith(ADMIN_KEY_PREFIXES.openai)) {
     return (
-      "That is an OpenAI ADMIN key (sk-admin-…), which does not serve inference — the " +
+      "That is an OpenAI ADMIN key (sk-admin-…), which does not serve inference, the " +
       "two key types are disjoint. Paste a project API key (sk-…) here; the admin key " +
       "belongs in the optional admin-key field."
     );

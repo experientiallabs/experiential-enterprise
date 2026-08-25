@@ -2099,6 +2099,81 @@ def test_s7_usage_rollups_across_keys_days_and_models(  # noqa: PLR0915 - the ro
 
 
 # ==================================================================================
+# Scenario 7b — the wire carries billing: usage.cost on completions (JSON and
+# the final streaming usage chunk) and the pricing extension on /v1/models.
+# ==================================================================================
+
+
+def test_s7b_responses_carry_billed_cost_and_listing_carries_pricing(
+    env: E2EEnvironment,
+) -> None:
+    """A real worker's /v1 responses report the settled billed cost."""
+    host = env.models["host"]
+    expected_micro = _cost_micro_usd(
+        _DEFAULT_PROMPT_TOKENS,
+        _DEFAULT_COMPLETION_TOKENS,
+        _HOST_INPUT_RATE,
+        _HOST_OUTPUT_RATE,
+    )
+    expected_cost = expected_micro / 1_000_000
+
+    # Non-streaming platform-funded: usage.cost is the settled charge.
+    response = _post_chat(env.w1, env.key_a1, host.slug)
+    assert response.status_code == 200, response.text
+    usage = response.json()["usage"]
+    assert usage["cost"] == expected_cost
+    # The OpenAI-defined usage fields are untouched beside the extension.
+    assert usage["prompt_tokens"] == _DEFAULT_PROMPT_TOKENS
+    assert usage["completion_tokens"] == _DEFAULT_COMPLETION_TOKENS
+
+    # Streaming platform-funded: the final usage chunk carries the same cost.
+    stream_cost: float | None = None
+    with httpx.Client(timeout=60.0) as client:  # noqa: SIM117 - stream context inside the client
+        with client.stream(
+            "POST",
+            f"{env.w1.base_url}/v1/chat/completions",
+            headers={"Authorization": f"Bearer {env.key_a1.raw_key}"},
+            json=_chat_payload(host.slug, stream=True, stream_options={"include_usage": True}),
+        ) as stream:
+            assert stream.status_code == 200
+            for line in stream.iter_lines():
+                if not line.startswith("data: ") or line == "data: [DONE]":
+                    continue
+                chunk = json.loads(line.removeprefix("data: "))
+                chunk_usage = chunk.get("usage")
+                if isinstance(chunk_usage, dict):
+                    stream_cost = chunk_usage.get("cost")
+    assert stream_cost == expected_cost
+
+    # KEYED requests are replay-safe: exp's idempotency contract returns the
+    # exact retained bytes (S3 pins replay.content == first.content), so the
+    # annotator must skip them — the original carries no cost field either.
+    direct = env.models["direct"]
+    byok = _post_chat(
+        env.w1,
+        env.key_a1,
+        direct.slug,
+        headers={"Idempotency-Key": f"cost-fields-{uuid.uuid4()}"},
+    )
+    assert byok.status_code == 200, byok.text
+    assert "cost" not in byok.json()["usage"]
+
+    # The models listing keeps the OpenAI object shape and adds pricing.
+    listing = httpx.get(
+        f"{env.w1.base_url}/v1/models",
+        headers={"Authorization": f"Bearer {env.key_a1.raw_key}"},
+        timeout=30.0,
+    )
+    assert listing.status_code == 200
+    by_id = {entry["id"]: entry for entry in listing.json()["data"]}
+    assert by_id[host.slug]["object"] == "model"
+    assert by_id[host.slug]["pricing"] == {
+        "input_micro_usd_per_million_tokens": _HOST_INPUT_RATE,
+        "output_micro_usd_per_million_tokens": _HOST_OUTPUT_RATE,
+    }
+
+
+# ==================================================================================
 # Scenario 8 — worker failover: kill mid-stream, reconcile honestly, keep
 # serving from the surviving worker.
 # ==================================================================================

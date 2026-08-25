@@ -102,7 +102,7 @@ export function LocalVariantForm({ slug, displayName, orgId, defaultOpen = false
         </div>
         {created !== null ? (
           <p className="m-0 text-[12.5px] text-success">
-            Created <span className="font-mono text-[11.5px]">{created}</span> — a model private to
+            Created <span className="font-mono text-[11.5px]">{created}</span>, a model private to
             your organization.{" "}
             <Link className="font-semibold text-accent underline" href={modelPath(created)}>
               View model
@@ -125,7 +125,7 @@ export function LocalVariantForm({ slug, displayName, orgId, defaultOpen = false
       <p className="mono-label m-0">New local model</p>
       <p className="m-0 max-w-[780px] text-[12.5px] leading-relaxed text-muted">
         An OpenAI-compatible endpoint your organization runs. This creates a model private to your
-        org — callable through the same gateway with identical telemetry — served from your
+        org, callable through the same gateway with identical telemetry, served from your
         endpoint. It appears as its own model, not a route on this public model.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">

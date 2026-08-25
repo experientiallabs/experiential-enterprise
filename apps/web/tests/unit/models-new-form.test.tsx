@@ -100,6 +100,31 @@ describe("custom model form", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/models/my-coder?created=1"));
   });
 
+  it("omits pricing_source on an unpriced local model (blank means unknown, never $0)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ model: { slug: "my-coder" } })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<CustomModelForm orgId="org-1" />);
+    fireEvent.change(screen.getByLabelText(/Display name/), { target: { value: "My Coder" } });
+    fireEvent.change(screen.getByLabelText(/Base URL/), {
+      target: { value: "https://gpu.example.com:8000/v1" }
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create model" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    const route = body.providers[0];
+    expect(route.provider).toBe("local");
+    // The API's DeploymentCreate is extra="forbid" with optional prices; an
+    // unpriced local route must arrive without prices or a pricing_source.
+    expect("pricing_source" in route).toBe(false);
+    expect("input_micro_usd_per_million" in route).toBe(false);
+    expect("output_micro_usd_per_million" in route).toBe(false);
+  });
+
   it("shows the backend's message verbatim on rejection", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,

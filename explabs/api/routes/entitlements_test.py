@@ -104,3 +104,53 @@ def test_granted_org_resolves_available_via_registry() -> None:
     client = cast("SupabaseClient", supabase)
     assert org_capabilities(client, ORG_ID)["audit_log"] == "available"
     assert org_capabilities(client, "other-org")["audit_log"] == "unlicensed"
+
+
+def test_deployment_wide_listing_labels_orgs() -> None:
+    """The Enterprise tab's read: every grant, labeled with its org."""
+    supabase = _seeded()
+    api = _client(supabase, ACTOR_ID)
+    api.put(f"/api/admin/orgs/{ORG_ID}/entitlements/teams", json={})
+    listed = api.get("/api/admin/entitlements")
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()["entitlements"]
+    assert [(row["capability"], row["org_slug"]) for row in rows] == [("teams", "org")]
+
+
+def test_deployment_wide_listing_is_operator_only() -> None:
+    """Tenants get the absent 404, exactly like the per-org surface."""
+    api = _client(_seeded(operator=False), _TENANT_ID)
+    assert api.get("/api/admin/entitlements").status_code == 404
+
+
+def test_deployment_wide_listing_pages_past_the_postgrest_row_cap() -> None:
+    """More grants than one PostgREST page must all appear, all labeled.
+
+    The fake truncates unwindowed selects at 1000 rows exactly like PostgREST,
+    so an unpaginated read would fail this test by dropping the tail.
+    """
+    supabase = _seeded()
+    org_count = 201  # 201 orgs x 5 capabilities = 1005 rows, one past the cap.
+    supabase.tables["organizations"] = [
+        {"id": f"org-{index:04d}", "slug": f"org-{index:04d}", "name": f"Org {index}"}
+        for index in range(org_count)
+    ]
+    supabase.tables["org_entitlements"] = [
+        {
+            "org_id": f"org-{index:04d}",
+            "capability": capability,
+            "granted_by": None,
+            "note": None,
+            "created_at": "2026-08-01T00:00:00+00:00",
+            "expires_at": None,
+        }
+        for index in range(org_count)
+        for capability in ("audit_log", "sso", "scim", "teams", "data_controls")
+    ]
+    listed = _client(supabase, ACTOR_ID).get("/api/admin/entitlements")
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()["entitlements"]
+    assert len(rows) == org_count * 5
+    # Keyset re-anchoring must neither duplicate the split org nor drop the tail.
+    assert len({(row["org_id"], row["capability"]) for row in rows}) == org_count * 5
+    assert all(row["org_slug"] == row["org_id"] for row in rows), "every row must be labeled"

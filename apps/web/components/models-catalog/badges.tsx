@@ -9,6 +9,7 @@ import { clsx } from "clsx";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { paramChipLabel, providerDescription, providerLabel } from "@/lib/models-catalog/format";
 import type { PromoChip } from "@/lib/models-catalog/promotions";
+import { formatPerMillionUsd } from "@/lib/money";
 
 import { ProviderLogo } from "./model-icon";
 
@@ -153,6 +154,27 @@ export function PromoChipBadge({ chip }: { chip: PromoChip }) {
     return <FreeChip providers={chip.providers} />;
   }
   return <PercentOffChip percent={chip.percent_off} providers={chip.providers} />;
+}
+
+/**
+ * A promoted model's per-million price: the list price struck through, the
+ * effective promo price beside it ($0 for a free promo). An unknown price
+ * renders its usual placeholder untouched — a promotion never turns
+ * "unpriced" into "free" (lib/money.ts contract).
+ */
+export function PromoPrice({ list, effective }: { list: number | null; effective: number | null }) {
+  // No strikethrough when the promo does not reprice the figure (unknown
+  // price, or a lane-scoped promo whose covered lanes don't beat the list
+  // price) — the chip alone carries the deal there.
+  if (list === null || effective === null || effective === list) {
+    return <>{formatPerMillionUsd(list)}</>;
+  }
+  return (
+    <span className="inline-flex items-baseline gap-1.5" data-testid="promo-price">
+      <s className="text-muted-2">{formatPerMillionUsd(list)}</s>
+      <span>{formatPerMillionUsd(effective)}</span>
+    </span>
+  );
 }
 
 /** Deployment status as a quiet dot + word (active / degraded / disabled). */

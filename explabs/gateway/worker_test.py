@@ -600,13 +600,17 @@ def test_startup_path_connects_carry_a_bounded_connect_timeout(
     unbounded connect against an unreachable Supabase hangs startup for minutes
     and starves ``/health/ready`` of an honest 503.
     """
-    recorded: list[int | None] = []
+    recorded: list[tuple[int | None, int | None]] = []
 
     def fake_connect(
-        dsn: str, *, connect_timeout: int | None = None, **_: object
+        dsn: str,
+        *,
+        connect_timeout: int | None = None,
+        prepare_threshold: int | None = 5,
+        **_: object,
     ) -> psycopg.Connection[tuple[object, ...]]:
         del dsn
-        recorded.append(connect_timeout)
+        recorded.append((connect_timeout, prepare_threshold))
         message = "unreachable"
         raise psycopg.OperationalError(message)
 
@@ -615,13 +619,17 @@ def test_startup_path_connects_carry_a_bounded_connect_timeout(
     try:
         pool_kwargs = cast("dict[str, object]", runtime.db._pool.kwargs)  # noqa: SLF001
         assert cast("int", pool_kwargs["connect_timeout"]) > 0
+        assert pool_kwargs["prepare_threshold"] is None
         refresher = cast("GatewayCatalogRefresher", runtime.catalog)
         with pytest.raises(psycopg.OperationalError):
             refresher._connect()  # noqa: SLF001
     finally:
         runtime.db.close()
     assert recorded
-    assert all(timeout is not None and timeout > 0 for timeout in recorded)
+    assert all(
+        timeout is not None and timeout > 0 and prepare_threshold is None
+        for timeout, prepare_threshold in recorded
+    )
 
 
 def test_startup_fails_fast_and_logs_the_psycopg_error(

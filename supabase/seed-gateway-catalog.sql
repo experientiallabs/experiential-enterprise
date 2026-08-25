@@ -965,7 +965,10 @@ from (values
   ('glm-5', 'bedrock', 'zai.glm-5'),
   ('deepseek-v4-pro', 'azure_openai', 'DeepSeek-V4-Pro'),
   ('deepseek-v4-flash', 'azure_openai', 'DeepSeek-V4-Flash'),
-  ('deepseek-v4-flash', 'fireworks', 'accounts/fireworks/models/deepseek-v4-flash-0731'),
+  -- No fireworks lane for the undated base: their only DeepSeek V4 Flash
+  -- registration is the dated -0731 build, which is its own catalog model
+  -- below (a pinned build is not the rolling base, and one wire id may not
+  -- serve two models).
   ('deepseek-v4-flash-0731', 'azure_openai', 'DeepSeek-V4-Flash-0731'),
   ('deepseek-v4-flash-0731', 'fireworks', 'accounts/fireworks/models/deepseek-v4-flash-0731'),
   ('deepseek-v4-pro-0813', 'fireworks', 'accounts/fireworks/models/deepseek-v4-pro-0813'),
@@ -1080,8 +1083,7 @@ from (values
   ('deepseek-v4-pro', 0, 'azure_openai', 'DeepSeek-V4-Pro'),
   ('deepseek-v4-pro', 1, 'openrouter', 'deepseek/deepseek-v4-pro'),
   ('deepseek-v4-flash', 0, 'azure_openai', 'DeepSeek-V4-Flash'),
-  ('deepseek-v4-flash', 1, 'fireworks', 'accounts/fireworks/models/deepseek-v4-flash-0731'),
-  ('deepseek-v4-flash', 2, 'openrouter', 'deepseek/deepseek-v4-flash'),
+  ('deepseek-v4-flash', 1, 'openrouter', 'deepseek/deepseek-v4-flash'),
   ('deepseek-v4-flash-0731', 0, 'azure_openai', 'DeepSeek-V4-Flash-0731'),
   ('deepseek-v4-flash-0731', 1, 'fireworks', 'accounts/fireworks/models/deepseek-v4-flash-0731'),
   ('deepseek-v4-flash-0731', 2, 'openrouter', 'deepseek/deepseek-v4-flash-0731'),
@@ -1226,15 +1228,55 @@ select
 from missing_deployments missing
 join chain_maxima maxima on maxima.model_id = missing.model_id;
 
+-- Experiential Cloud leads every default chain it serves on (owner decision
+-- 2026-08-24): renumber each default chain carrying an experiential_cloud
+-- rung so those rungs come first, preserving relative order within each
+-- group. Scoped to chains not already EC-first so a re-seed leaves settled
+-- rows untouched (updated_at stays honest); org-scoped overrides are a
+-- tenant's explicit order and are never renumbered. Two phases because the
+-- (model_id, org_id, position) key is checked per row: park the chain far
+-- above its range, then write the final 0..n-1.
+with out_of_order as (
+  select w.model_id
+  from public.model_waterfalls w
+  join public.model_providers mp on mp.id = w.model_provider_id
+  where w.org_id is null
+  group by w.model_id
+  having bool_or(mp.provider = 'experiential_cloud')
+     and min(w.position) filter (where mp.provider <> 'experiential_cloud')
+         < max(w.position) filter (where mp.provider = 'experiential_cloud')
+)
+update public.model_waterfalls w
+   set position = w.position + 1000000
+ where w.org_id is null
+   and w.model_id in (select model_id from out_of_order);
+
+with ranked as (
+  select w.id,
+         row_number() over (
+           partition by w.model_id
+           order by (mp.provider <> 'experiential_cloud'), w.position, w.id
+         ) - 1 as new_position
+  from public.model_waterfalls w
+  join public.model_providers mp on mp.id = w.model_provider_id
+  where w.org_id is null
+    and w.position >= 1000000
+)
+update public.model_waterfalls w
+   set position = ranked.new_position
+  from ranked
+ where ranked.id = w.id;
+
 -- ---------------------------------------------------------------------------
 -- Promotions (v2: scoped). Seeds the launch set: three FREE tiers (Qwen3.8
--- 27B $10, DeepSeek V4 Flash $10, GPT-5.6 Luna $20 — per-org, lifetime) and
--- the "GPT on Experiential Cloud — 50% off" promotion (model scope = the GPT
--- family, resolved here by models.icon = 'openai'; lane scope =
+-- 27B $10, DeepSeek V4 Flash $10, GPT-5.6 Luna $20 -- per-org, lifetime) and
+-- the "GPT on Experiential Cloud - 50% off" promotion (owner decision
+-- 2026-08-24: model scope = exactly gpt-5.6-luna/sol/terra by explicit
+-- membership, audience = orgs carrying the 'yc' label only; lane scope =
 -- experiential_cloud, so the discount applies only to requests SERVED through
 -- Experiential Cloud; per-org charged-spend ceiling $50,000, lifetime). The
--- gateway enforces both caps at the reservation seam; the catalog reads the
--- display projection. Cap micro-USD: $1 = 1_000_000.
+-- gateway enforces caps and audience at the reservation seam; the catalog
+-- reads the display projection. Cap micro-USD: $1 = 1_000_000.
 --
 -- ADMIN-SAFE: promotions are admin-managed (Admin -> Promotions), so a
 -- re-seed must NOT clobber an operator's edits. Keyed on label with ON
@@ -1244,13 +1286,13 @@ join chain_maxima maxima on maxima.model_id = missing.model_id;
 with seeded as (
   insert into public.model_promotions (
     label, per_org_cap_micro_usd, discount_cap_micro_usd, cap_scope,
-    percent_off, providers, family_keys, active, display_order
+    percent_off, providers, family_keys, audience_labels, active, display_order
   ) values
-    ('qwen3.8-27b', 10000000, 0, 'lifetime', 0, '{}', '{}', true, 0),
-    ('deepseek-v4-flash', 10000000, 0, 'lifetime', 0, '{}', '{}', true, 1),
-    ('gpt-5.6-luna', 20000000, 0, 'lifetime', 0, '{}', '{}', true, 2),
-    ('GPT on Experiential Cloud — 50% off', 0, 50000000000, 'lifetime', 50,
-     array['experiential_cloud'], array['openai'], true, 3)
+    ('qwen3.8-27b', 10000000, 0, 'lifetime', 0, '{}', '{}', '{}', true, 0),
+    ('deepseek-v4-flash', 10000000, 0, 'lifetime', 0, '{}', '{}', '{}', true, 1),
+    ('gpt-5.6-luna', 20000000, 0, 'lifetime', 0, '{}', '{}', '{}', true, 2),
+    ('GPT on Experiential Cloud - 50% off', 0, 50000000000, 'lifetime', 50,
+     array['experiential_cloud'], '{}', array['yc'], true, 3)
   on conflict (label) do nothing
   returning id, label
 )
@@ -1262,8 +1304,8 @@ select seeded.id, models.id, models.slug
    and (
      (seeded.label in ('qwen3.8-27b', 'deepseek-v4-flash', 'gpt-5.6-luna')
       and models.slug = seeded.label)
-     or (seeded.label = 'GPT on Experiential Cloud — 50% off'
-         and models.icon = 'openai')
+     or (seeded.label = 'GPT on Experiential Cloud - 50% off'
+         and models.slug in ('gpt-5.6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra'))
    )
 on conflict (promotion_id, model_id) do nothing;
 
@@ -3308,5 +3350,47 @@ on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do 
 insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
 select m.id, 'gemini', 'deep-research-pro-preview-12-2025', 'customer_managed', 0, 0, 'estimate', '{"supports_streaming": true}'::jsonb
 from public.models m where m.slug = 'deep-research-pro-preview-12-2025' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+-- daily sync 2026-08-24
+insert into public.models (slug, display_name, release_date, context_window, input_modalities)
+values ('gemma-3n-e4b-it', 'Gemma 3n E4B Instruct', '2025-05-20', 32768, '{text}')
+on conflict (slug, owning_org_id) do nothing;
+insert into public.models (slug, display_name, release_date, context_window, input_modalities)
+values ('step-3.5-flash', 'Step 3.5 Flash', '2026-01-29', 262144, '{text}')
+on conflict (slug, owning_org_id) do nothing;
+insert into public.models (slug, display_name, release_date, context_window, input_modalities)
+values ('qwen3-vl-8b-thinking', 'Qwen3 VL 8B Thinking', '2025-10-14', 131072, '{image,text}')
+on conflict (slug, owning_org_id) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'gemini', 'gemini-flash-latest', 'customer_managed', null, null, 'estimate', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'gemini-flash-latest' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'gemini', 'gemini-pro-latest', 'customer_managed', null, null, 'estimate', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'gemini-pro-latest' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openai', 'gpt-3.5-turbo-16k', 'customer_managed', null, null, 'estimate', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'gpt-3.5-turbo-16k' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openai', 'gpt-4o-mini-search-preview', 'customer_managed', 0, 0, 'estimate', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'gpt-4o-mini-search-preview' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openai', 'omni-moderation-latest', 'customer_managed', 0, 0, 'estimate', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'omni-moderation' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openrouter', 'google/gemma-3n-e4b-it', 'host_managed', 60000, 120000, 'openrouter', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'gemma-3n-e4b-it' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openrouter', 'qwen/qwen3-vl-8b-thinking', 'host_managed', 180000, 2100000, 'openrouter', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'qwen3-vl-8b-thinking' and m.owning_org_id is null
+on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
+insert into public.model_providers (model_id, provider, provider_model_id, billing_source, input_micro_usd_per_million, output_micro_usd_per_million, pricing_source, capabilities)
+select m.id, 'openrouter', 'stepfun/step-3.5-flash', 'host_managed', 100000, 300000, 'openrouter', '{"supports_streaming": true}'::jsonb
+from public.models m where m.slug = 'step-3.5-flash' and m.owning_org_id is null
 on conflict (model_id, provider, provider_model_id, owning_org_id, base_url) do nothing;
 -- END DAILY-SYNC MODELS

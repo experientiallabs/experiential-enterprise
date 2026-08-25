@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(17);
+select plan(19);
 
 update public.app_settings set signups_enabled = true;
 
@@ -146,6 +146,32 @@ select ok(
 select ok(
   has_table_privilege('authenticated', 'public.org_labels', 'SELECT'),
   'the authenticated role has SELECT on org_labels (member-facing YC read)'
+);
+
+-- ---------------------------------------------------------------------------
+-- Idempotent on the label: an org already carrying `yc` (e.g. an operator
+-- backfill credited it via a different source and tagged it) must NOT get a
+-- second grant when it later hits the self-serve /yc claim. The label is the
+-- "promotion applied" gate, so the claim grants nothing.
+insert into public.organizations (id, slug, name)
+values ('52000000-0000-0000-0000-0000000000f1', 'pgtap-yc-f', 'pgTAP YC F');
+insert into public.org_labels (org_id, key, created_by)
+values ('52000000-0000-0000-0000-0000000000f1', 'yc',
+        '00000000-0000-0000-0000-000000000000');
+
+create temp table yc_f as
+select * from public.apply_yc_launch_grant(
+  '52000000-0000-0000-0000-0000000000f1', 526, null, null
+);
+select ok(
+  (select not newly_applied from yc_f),
+  'a pre-tagged org (backfilled) reports newly_applied false'
+);
+select is(
+  (select count(*) from public.credit_ledger
+    where org_id = '52000000-0000-0000-0000-0000000000f1' and source = 'yc_launch'),
+  0::bigint,
+  'a pre-tagged org gets NO yc_launch grant — the /yc path cannot double-claim'
 );
 
 select finish();

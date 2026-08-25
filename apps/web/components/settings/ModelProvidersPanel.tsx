@@ -32,7 +32,7 @@ const STATUS_LABELS: Record<ProviderConnectionStatus, string> = {
   invalid: "invalid key",
   rate_limited: "rate limited",
   quota_exhausted: "out of quota",
-  provider_error: "unverified — provider error"
+  provider_error: "unverified, provider error"
 };
 
 // Re-read a provider's spend/credits on mount when the shown reading is older
@@ -99,7 +99,7 @@ function providerSpendLine(snapshot: ProviderAccountSnapshot): string {
   }
   const source = snapshot.source === "our_side" ? "from AWS Cost Explorer" : "provider-reported";
   const asOf = new Date(snapshot.taken_at).toLocaleString();
-  return `${parts.length > 0 ? parts.join(" · ") : "No dollars reported"} — ${source}, ${asOf}.`;
+  return `${parts.length > 0 ? parts.join(" · ") : "No dollars reported"}, ${source}, ${asOf}.`;
 }
 
 /** The honest per-provider sentence shown where no real reading can exist. */
@@ -114,7 +114,7 @@ function spendEmptyState(connection: ProviderConnectionState): string {
     case "openai":
       return "Add an admin key (sk-admin-…) to see month-to-date spend.";
     default:
-      return "No spend reading yet — refresh to ask the provider.";
+      return "No spend reading yet, refresh to ask the provider.";
   }
 }
 
@@ -592,8 +592,8 @@ export function ProviderBody({
               onChange={(event) => setSpendSecret(event.target.value)}
               placeholder={
                 connection.spendCredentialLast4
-                  ? `Admin key (optional) — stored ····${connection.spendCredentialLast4}`
-                  : "Admin key (optional) — lets us show your month-to-date spend"
+                  ? `Admin key (optional), stored ····${connection.spendCredentialLast4}`
+                  : "Admin key (optional), lets us show your month-to-date spend"
               }
               type="password"
               value={spendSecret}
@@ -705,7 +705,7 @@ export function ProviderBody({
               left of the ${connection.declaredBalanceUsd?.toFixed(2)} you declared
               {connection.meteredSpendUsd > 0 && (
                 <>
-                  {" — "}
+                  {", "}
                   <span className="font-mono">${connection.meteredSpendUsd.toFixed(2)}</span> used
                   through this key
                   {connection.declaredBalanceSetAt
@@ -713,7 +713,7 @@ export function ProviderBody({
                     : ""}
                 </>
               )}
-              {balanceLow ? " — top up with your provider or update the figure." : "."}
+              {balanceLow ? ", top up with your provider or update the figure." : "."}
             </p>
           ) : (
             <p className="m-0 text-[12px] text-muted">

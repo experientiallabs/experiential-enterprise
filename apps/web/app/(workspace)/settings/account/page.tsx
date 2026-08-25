@@ -34,7 +34,7 @@ export default async function AccountSettingsPage() {
             </h2>
             <p className="m-0 mt-2 max-w-[360px] text-muted text-[13px] leading-relaxed">
               {passwordSection === "set"
-                ? "Your account signs in with an emailed code and has no password. Set one if you also want a password login — the emailed code keeps working either way."
+                ? "Your account signs in with an emailed code and has no password. Set one if you also want a password login. The emailed code keeps working either way."
                 : "Update the password for your signed-in account. This applies to you across every organization you belong to. You'll stay signed in after the change."}
             </p>
           </div>

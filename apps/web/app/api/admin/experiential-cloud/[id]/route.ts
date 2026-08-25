@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isPlatformAdmin } from "@/lib/auth/admin";
 import { getDataSource } from "@/lib/data-source";
 import { jsonError } from "@/lib/http";
+import { revalidateModelsCatalog } from "@/lib/models-catalog/server";
 
 import { parseUpdateInput } from "../route";
 
@@ -30,6 +31,8 @@ export async function PATCH(request: NextRequest, context: Context): Promise<Res
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const deployment = await getDataSource().updateAdminExperientialCloud(id, parsed.value);
+    // Price/state edits render on the shared cached public catalog; bust it.
+    revalidateModelsCatalog();
     return NextResponse.json(deployment);
   } catch (error) {
     return jsonError(error);

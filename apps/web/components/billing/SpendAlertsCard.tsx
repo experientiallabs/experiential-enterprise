@@ -148,7 +148,7 @@ export function SpendAlertsCard({ orgId, canManage }: SpendAlertsCardProps) {
     <section className="border border-line rounded-lg bg-surface p-[18px]" data-testid="spend-alerts">
       <h2 className="m-0 mb-2 text-sm font-semibold text-ink">Spend alerts</h2>
       <p className="m-0 mb-3 text-[13px] text-muted">
-        Get an email — at most once per calendar month (UTC) — when your organization&rsquo;s
+        Get an email, at most once per calendar month (UTC), when your organization&rsquo;s
         monthly spend crosses a dollar amount, or when a budget is consumed past a percentage.
         Rules are checked every 15 minutes. These are notifications only; hard budget caps keep
         enforcing on their own.
@@ -316,7 +316,7 @@ function lastEventLine(alert: SpendAlertView): string {
       : event.delivery_error !== null
         ? `delivery failed: ${event.delivery_error}`
         : "email pending";
-  return `Fired for ${event.period} at ${measured} — ${state}.`;
+  return `Fired for ${event.period} at ${measured}, ${state}.`;
 }
 
 /** Compact one-line name for a budget row in the dropdown and rule lines. */

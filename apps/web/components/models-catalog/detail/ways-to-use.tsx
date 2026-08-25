@@ -842,7 +842,7 @@ function Price({
       className="text-right font-mono text-[11px] text-ink-soft"
       title={
         estimated
-          ? "Estimated price in USD per million tokens (input / output) — not yet measured"
+          ? "Estimated price in USD per million tokens (input / output), not yet measured"
           : "Price in USD per million tokens: input / output"
       }
     >

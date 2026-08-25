@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SlidingTabs } from "@/components/ui/SlidingTabs";
 import {
   adminAccessPath,
+  adminEnterprisePath,
   adminExperientialCloudPath,
   adminPath,
   adminPlatformPath,
@@ -29,6 +30,7 @@ export function AdminSectionTabs() {
     { key: "access", label: "Access", href: adminAccessPath(), exact: false },
     { key: "platform", label: "Platform", href: adminPlatformPath(), exact: false },
     { key: "promotions", label: "Promotions", href: adminPromotionsPath(), exact: false },
+    { key: "enterprise", label: "Enterprise", href: adminEnterprisePath(), exact: false },
     {
       key: "experiential-cloud",
       label: "Experiential Cloud",

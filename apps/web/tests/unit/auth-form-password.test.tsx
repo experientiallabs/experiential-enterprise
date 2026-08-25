@@ -60,18 +60,19 @@ afterEach(() => {
 });
 
 describe("AuthForm password option", () => {
-  it("defaults to password sign-in with the emailed-code option as the toggle", () => {
+  it("stays passwordless by default: the password field is hidden until toggled", () => {
     stubFetch();
     renderForm();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-    // The emailed-code flow stays one click away for local runs.
-    expect(screen.getByRole("button", { name: "Sign in with email code" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    // The opt-in toggle is present.
+    expect(screen.getByRole("button", { name: "Sign in with password" })).toBeInTheDocument();
   });
 
-  it("signs in with a password from the default mode", async () => {
+  it("signs in with a password after switching modes", async () => {
     const fetchMock = stubFetch();
     const onSuccess = renderForm();
 
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     const passwordInput = await screen.findByLabelText("Password");
     fireEvent.change(passwordInput, { target: { value: "hunter2xx" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
@@ -84,45 +85,60 @@ describe("AuthForm password option", () => {
     });
   });
 
-  it("shows a uniform error for bad password credentials", async () => {
-    stubFetch({ signin: { status: 401, payload: { error: "Invalid email or password." } } });
+  it("wrong_password shows a specific message plus the reset and code offers", async () => {
+    stubFetch({
+      signin: { status: 401, payload: { code: "wrong_password", error: "Wrong password." } }
+    });
     const onSuccess = renderForm();
 
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "nope" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText("Invalid email or password.")).toBeInTheDocument();
+    expect(await screen.findByText(/Wrong password\./)).toBeInTheDocument();
+    // The reset affordance (existing inline button) and the secondary code link.
+    expect(screen.getByRole("button", { name: "Forgot password?" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Sign in with an emailed code instead" })
+    ).toBeInTheDocument();
+    // Not the no_account branch, and never the old always-on double message.
+    expect(screen.queryByRole("button", { name: "Create an account" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/No account yet, or never set a password/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Invalid email or password.")).not.toBeInTheDocument();
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
-  it("offers the emailed-code path after a rejected password attempt (no dead end)", async () => {
-    // The 401 is uniform, so an email with NO account lands here too: the form
-    // must offer the code flow, which creates the account on first use. The
-    // offer renders on every rejection (existing account included) so it leaks
-    // no account-existence signal beyond what the route already returns.
-    stubFetch({ signin: { status: 401, payload: { error: "Invalid email or password." } } });
+  it("no_account reveals the Create-an-account affordance and hides reset", async () => {
+    stubFetch({
+      signin: { status: 401, payload: { code: "no_account", error: "No account found for that email." } }
+    });
     renderForm();
 
-    expect(screen.queryByRole("button", { name: "Email me a sign-in code" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
+    expect(screen.queryByRole("button", { name: "Create an account" })).not.toBeInTheDocument();
     fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "nope" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    // Both surfaces stay up: the uniform error AND the way out of it.
-    expect(await screen.findByText("Invalid email or password.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Email me a sign-in code" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Create an account" })).toBeInTheDocument();
+    // No account to reset, so the reset affordance is hidden here.
+    expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
+    // Not the wrong_password branch, and never the old always-on double message.
+    expect(screen.queryByText(/Wrong password\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No account yet, or never set a password/)).not.toBeInTheDocument();
   });
 
-  it("routes the rejection offer through the same /auth/otp signup flow as code mode", async () => {
+  it("routes Create-an-account through the same /auth/otp signup flow as code mode", async () => {
     const fetchMock = stubFetch({
-      signin: { status: 401, payload: { error: "Invalid email or password." } },
+      signin: { status: 401, payload: { code: "no_account", error: "No account found for that email." } },
       // A brand-new address: entering the emailed code creates the account.
       verify: { status: 200, payload: { ok: true, created: true } }
     });
     const onSuccess = renderForm();
 
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "nope" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Email me a sign-in code" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create an account" }));
 
     // Same send as pressing Continue in code mode: /auth/otp with the typed
     // address, landing on the code-entry stage bound to it.
@@ -132,13 +148,13 @@ describe("AuthForm password option", () => {
       email: "founder@company.com",
       inviteToken: null
     });
-    expect(screen.queryByText("Invalid email or password.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create an account" })).not.toBeInTheDocument();
 
     fireEvent.change(codeInput, { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    // The verify created the account — the same signup logic /signin's code
-    // flow uses, surfaced as created:true so the host can celebrate.
+    // The verify created the account: the same signup logic /signin's code flow
+    // uses, surfaced as created:true so the host can celebrate.
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith({ created: true }));
   });
 
@@ -146,6 +162,7 @@ describe("AuthForm password option", () => {
     const fetchMock = stubFetch();
     renderForm();
 
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     fireEvent.click(await screen.findByRole("button", { name: "Forgot password?" }));
 
     expect(
@@ -159,14 +176,61 @@ describe("AuthForm password option", () => {
     });
   });
 
-  it("can switch to the email-code flow and back", async () => {
+  it("can switch back to the email-code flow", async () => {
     stubFetch();
     renderForm();
 
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
-    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     expect(await screen.findByLabelText("Password")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  });
+});
+
+describe("AuthForm OTP send de-dupe", () => {
+  function otpCalls(mock: ReturnType<typeof stubFetch>): number {
+    return mock.mock.calls.filter(([url]) => url === "/auth/otp").length;
+  }
+
+  it("sends the OTP exactly once when the code stage is entered, even on a double Continue", async () => {
+    // The double-code bug: a second requestCode for the same address fires
+    // GoTrue again, which reuses the same token and emails a second identical
+    // code. A rapid double Continue must still send exactly once.
+    const fetchMock = stubFetch();
+    renderForm();
+
+    const continueButton = screen.getByRole("button", { name: "Continue" });
+    fireEvent.click(continueButton);
+    fireEvent.click(continueButton);
+
+    await screen.findByLabelText("Sign-in code");
+    expect(otpCalls(fetchMock)).toBe(1);
+  });
+
+  it("does not re-send when Create-an-account routes into the code flow", async () => {
+    const fetchMock = stubFetch({
+      signin: { status: 401, payload: { code: "no_account", error: "No account found." } }
+    });
+    renderForm();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
+    fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create an account" }));
+
+    await screen.findByLabelText("Sign-in code");
+    expect(otpCalls(fetchMock)).toBe(1);
+  });
+
+  it("Resend code deliberately sends another OTP", async () => {
+    const fetchMock = stubFetch();
+    renderForm();
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await screen.findByLabelText("Sign-in code");
+    expect(otpCalls(fetchMock)).toBe(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Resend code" }));
+    await waitFor(() => expect(otpCalls(fetchMock)).toBe(2));
   });
 });

@@ -215,7 +215,7 @@ the key acts for its org):
                                         idempotent 202 accepted; the worker
                                         verifies the object then projects.
                                         Same formats and <=50MB as before.
-                                        Arize/Phoenix have no live pull yet — use
+                                        Arize/Phoenix have no live pull yet, use
                                         this with source_kind phoenix (or otlp).
   GET  /api/orgs/<org_id>/telemetry/traces   the org's landed telemetry traces
                                         plus total_ingests and total_traces (the

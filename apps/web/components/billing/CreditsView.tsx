@@ -187,7 +187,9 @@ export function CreditsView({
             orgId={orgId}
             webBaseUrl={webBaseUrl}
           />
-          <DealsSection connections={connections} />
+          {/* The YC Bookface deal links are for YC companies only, like the
+              per-tile deal links above — gate the whole section on the tag. */}
+          {isYcCompany && <DealsSection connections={connections} />}
         </div>
       )}
       {tab === "settings" && (

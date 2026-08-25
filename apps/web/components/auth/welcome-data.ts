@@ -25,12 +25,15 @@ export type WelcomeData = {
    * the reveal must stop rather than poll for a mint that will never happen.
    */
   canManageKeys: boolean;
+  /** Whether the org carries the `yc` tag — drives the modal's YC co-branding. */
+  isYcCompany: boolean;
 };
 
 type WelcomeSummary = {
   org: { id: string };
   apiKey: { keyPrefix: string } | null;
   canManageKeys: boolean;
+  isYcCompany: boolean;
   credit: { grantedUsd: number; billableUsd: number };
 };
 
@@ -39,7 +42,7 @@ type WelcomeSummary = {
  * readable (memberless account, transient failure) — the step then shows its
  * links without a key or credits line rather than blocking the celebration.
  */
-export async function fetchWelcomeData(): Promise<WelcomeData | null> {
+export async function fetchWelcomeData(forceMint = false): Promise<WelcomeData | null> {
   const summary = await readWelcomeSummary();
   if (summary === null) {
     return null;
@@ -47,15 +50,33 @@ export async function fetchWelcomeData(): Promise<WelcomeData | null> {
   const { grantedUsd: granted, billableUsd } = summary.credit;
   const grantedUsd = granted > 0 && billableUsd === 0 ? granted : null;
   const canManageKeys = summary.canManageKeys;
-  if (summary.apiKey !== null) {
-    return { mintedSecret: null, keyPrefix: summary.apiKey.keyPrefix, grantedUsd, canManageKeys };
+  const isYcCompany = summary.isYcCompany;
+  // First-login reveal: only mint when the org has no key, otherwise show the
+  // existing prefix. Re-trigger (forceMint): always mint a FRESH key so every
+  // member walks away with a usable secret — existing keys are hash-stored and
+  // unrecoverable, so showing them is impossible; a new one is the only way.
+  if (summary.apiKey !== null && !forceMint) {
+    return {
+      mintedSecret: null,
+      keyPrefix: summary.apiKey.keyPrefix,
+      grantedUsd,
+      canManageKeys,
+      isYcCompany
+    };
   }
   if (!canManageKeys) {
-    // Non-admin member of an org with no keys yet: nothing to mint or show.
-    return { mintedSecret: null, keyPrefix: null, grantedUsd, canManageKeys };
+    // Non-admin member: cannot mint. Show the existing prefix if any, else stop.
+    const keyPrefix = summary.apiKey?.keyPrefix ?? null;
+    return { mintedSecret: null, keyPrefix, grantedUsd, canManageKeys, isYcCompany };
   }
   const secret = await mintDefaultKey(summary.org.id);
-  return { mintedSecret: secret, keyPrefix: null, grantedUsd, canManageKeys };
+  return {
+    mintedSecret: secret,
+    keyPrefix: summary.apiKey?.keyPrefix ?? null,
+    grantedUsd,
+    canManageKeys,
+    isYcCompany
+  };
 }
 
 async function readWelcomeSummary(): Promise<WelcomeSummary | null> {
@@ -91,6 +112,8 @@ async function readWelcomeSummary(): Promise<WelcomeSummary | null> {
     org: { id: org.id },
     apiKey: apiKey === null ? null : { keyPrefix: apiKey.keyPrefix as string },
     canManageKeys: record.canManageKeys,
+    // Older payloads (or a memberless read) omit it; default to non-YC.
+    isYcCompany: record.isYcCompany === true,
     credit: { grantedUsd: credit.grantedUsd, billableUsd: credit.billableUsd }
   };
 }

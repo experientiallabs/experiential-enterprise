@@ -35,6 +35,59 @@ export function rankPromosForSlug(promos: ModelPromotion[]): PromoChip | null {
 }
 
 /**
+ * One promo-repriced figure: a free promo is $0, a percent promo discounts the
+ * known price, and an UNKNOWN price stays unknown — a promotion never turns
+ * "unpriced" into "free". Lane scoping is the CALLER's job ({@link
+ * promoEffectivePrice} feeds this only the price a covered lane supplies).
+ */
+export function promoEffectiveMicro(
+  chip: PromoChip | null | undefined,
+  micro: number | null
+): number | null {
+  if (chip === undefined || chip === null || micro === null) {
+    return micro;
+  }
+  if (chip.kind === "free") {
+    return 0;
+  }
+  return Math.round(micro * (1 - chip.percent_off / 100));
+}
+
+type PricedLane = { provider: string; micro: number | null };
+
+/**
+ * The honest price pair for a promoted model: `list` is the cheapest known
+ * price across all lanes (what the catalog has always shown), `effective` is
+ * the best price actually payable under the promo. An unscoped promo reprices
+ * the list price; a LANE-SCOPED promo reprices only its covered lanes' best
+ * price, and the effective floor is the cheaper of that and the undiscounted
+ * list price — a discount on one lane never repricing an unrelated route, and
+ * a covered cheapest lane never losing its discount. Ranking, sorting, and
+ * best-value highlighting must feed `effective`.
+ */
+export function promoEffectivePrice(
+  chip: PromoChip | null | undefined,
+  lanes: PricedLane[]
+): { list: number | null; effective: number | null } {
+  const known = (values: Array<number | null>): number | null => {
+    const priced = values.filter((value): value is number => value !== null);
+    return priced.length === 0 ? null : Math.min(...priced);
+  };
+  const list = known(lanes.map((lane) => lane.micro));
+  if (chip === undefined || chip === null || list === null) {
+    return { list, effective: list };
+  }
+  if (chip.providers.length === 0) {
+    return { list, effective: promoEffectiveMicro(chip, list) };
+  }
+  const covered = known(
+    lanes.filter((lane) => chip.providers.includes(lane.provider)).map((lane) => lane.micro)
+  );
+  const discounted = promoEffectiveMicro(chip, covered);
+  return { list, effective: discounted === null ? list : Math.min(list, discounted) };
+}
+
+/**
  * slug -> its one ranked chip, over the whole active promotion set — the O(1)
  * per-row lookup the catalog table memoizes for its render hot path.
  */

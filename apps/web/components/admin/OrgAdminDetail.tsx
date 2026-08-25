@@ -648,7 +648,7 @@ function OrgLabelsSection({ orgId }: { orgId: string }) {
         </div>
         <p className="m-0 mt-1.5 text-[11px] text-muted-2">
           Marks the org a YC company (applies the <code>yc</code> tag) and grants the amount,
-          expiring on the date. Idempotent — safe to re-run.
+          expiring on the date. Idempotent, safe to re-run.
         </p>
       </div>
       {error && <p className="m-0 mt-3 text-[13px] text-danger">{error}</p>}
@@ -707,7 +707,7 @@ function WelcomeTriggerSection({
       setActive(nextActive);
       setNotice(
         nextActive
-          ? "Armed — members see the celebration on their next workspace enter."
+          ? "Armed, members see the celebration on their next workspace enter."
           : "Disarmed."
       );
     } finally {

@@ -14,21 +14,23 @@ function mockFetch(response: unknown, ok = true) {
 }
 
 describe("claimWelcomeTrigger", () => {
-  it("parses a positive claim", async () => {
-    mockFetch({ show: true, displayCreditUsd: 526, showApiKey: true });
+  it("parses a positive claim and carries the YC-company flag", async () => {
+    mockFetch({ show: true, displayCreditUsd: 526, showApiKey: true, isYcCompany: true });
     expect(await claimWelcomeTrigger()).toEqual({
       show: true,
       displayCreditUsd: 526,
-      showApiKey: true
+      showApiKey: true,
+      isYcCompany: true
     });
   });
 
-  it("coerces a non-numeric amount to null", async () => {
+  it("coerces a non-numeric amount to null and defaults isYcCompany false", async () => {
     mockFetch({ show: true, displayCreditUsd: "526", showApiKey: false });
     expect(await claimWelcomeTrigger()).toEqual({
       show: true,
       displayCreditUsd: null,
-      showApiKey: false
+      showApiKey: false,
+      isYcCompany: false
     });
   });
 
@@ -37,7 +39,8 @@ describe("claimWelcomeTrigger", () => {
     expect(await claimWelcomeTrigger()).toEqual({
       show: false,
       displayCreditUsd: null,
-      showApiKey: false
+      showApiKey: false,
+      isYcCompany: false
     });
   });
 
@@ -46,7 +49,8 @@ describe("claimWelcomeTrigger", () => {
     expect(await claimWelcomeTrigger()).toEqual({
       show: false,
       displayCreditUsd: null,
-      showApiKey: false
+      showApiKey: false,
+      isYcCompany: false
     });
   });
 });

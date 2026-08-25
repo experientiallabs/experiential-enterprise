@@ -25,10 +25,20 @@ export async function GET(): Promise<Response> {
     if (user === null) {
       return jsonOk({ models: [], total: 0, limit: 0, offset: 0 }, { "cache-control": "no-store" });
     }
-    const [activeOrg, overlay] = await Promise.all([resolveActiveOrg(), fetchOrgOwnedModels(user.id)]);
+    const activeOrg = await resolveActiveOrg();
+    const overlay = await fetchOrgOwnedModels(user.id, activeOrg.id);
     const models = overlay.models.filter((entry) => entry.model.owning_org_id === activeOrg.id);
+    // Promotions ride along audience-resolved for the ACTING org (the backend
+    // narrows label-scoped promos to it), so the storefront can replace the
+    // anonymous cached set it painted first.
     return jsonOk(
-      { models, total: models.length, limit: overlay.limit, offset: 0 },
+      {
+        models,
+        promotions: overlay.promotions,
+        total: models.length,
+        limit: overlay.limit,
+        offset: 0
+      },
       { "cache-control": "no-store" }
     );
   } catch (error) {

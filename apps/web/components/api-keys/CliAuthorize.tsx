@@ -115,7 +115,7 @@ export function CliAuthorize({ orgs, state, port, initialKeyName }: CliAuthorize
     return (
       <div className="flex items-center gap-3 rounded-lg border border-line bg-surface p-[18px] text-[13px]">
         <TerminalSquare aria-hidden size={16} strokeWidth={1.8} />
-        Key created — handing it to the CLI. You can return to your terminal.
+        Key created, handing it to the CLI. You can return to your terminal.
       </div>
     );
   }
@@ -126,7 +126,7 @@ export function CliAuthorize({ orgs, state, port, initialKeyName }: CliAuthorize
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="m-0 mb-1 text-[13px] font-semibold text-ink">
-              Paste this key into your terminal — it is shown only once.
+              Paste this key into your terminal, it is shown only once.
             </p>
             <code className="block overflow-x-auto whitespace-nowrap font-mono text-[13px]">
               {mintedSecret}
@@ -142,7 +142,7 @@ export function CliAuthorize({ orgs, state, port, initialKeyName }: CliAuthorize
           </button>
         </div>
         <div className="flex items-center justify-between text-[12px] text-muted">
-          {copied ? "Copied — taking you to your organization…" : "Copy it before leaving this page."}
+          {copied ? "Copied, taking you to your organization…" : "Copy it before leaving this page."}
           <button
             className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1 text-[12px] text-foreground/60 hover:border-line-strong hover:text-foreground"
             onClick={continueToOrg}

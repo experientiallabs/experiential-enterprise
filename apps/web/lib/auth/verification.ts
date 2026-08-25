@@ -60,7 +60,7 @@ export async function sendVerificationEmail(
     html: [
       `<div style="font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #171717;">`,
       `<h2 style="font-size: 18px; font-weight: 600;">Verify your email</h2>`,
-      `<p style="font-size: 14px; line-height: 1.6;">Confirm your email to unlock your free platform credits. Everything else — your dashboard, trace uploads, and your own provider keys (BYOK) — already works.</p>`,
+      `<p style="font-size: 14px; line-height: 1.6;">Confirm your email to unlock your free platform credits. Everything else, your dashboard, trace uploads, and your own provider keys (BYOK), already works.</p>`,
       `<p style="margin: 24px 0;"><a href="${safeLink}" style="background: #171717; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 9999px; font-size: 14px; font-weight: 600;">Verify email</a></p>`,
       `<p style="font-size: 12px; color: #737373; line-height: 1.6;">Or paste this link into your browser:<br /><a href="${safeLink}" style="color: #737373;">${safeLink}</a></p>`,
       `<p style="font-size: 12px; color: #737373;">If you didn't create an Experiential Labs account, you can ignore this email.</p>`,
@@ -112,10 +112,10 @@ export async function sendPasswordResetEmail(
     html: [
       `<div style="font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #171717;">`,
       `<h2 style="font-size: 18px; font-weight: 600;">Reset your password</h2>`,
-      `<p style="font-size: 14px; line-height: 1.6;">Click below to set a new password for your Experiential Labs account. You can always sign in with an emailed code instead — a password is optional.</p>`,
+      `<p style="font-size: 14px; line-height: 1.6;">Click below to set a new password for your Experiential Labs account. You can always sign in with an emailed code instead, a password is optional.</p>`,
       `<p style="margin: 24px 0;"><a href="${safeLink}" style="background: #171717; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 9999px; font-size: 14px; font-weight: 600;">Set a new password</a></p>`,
       `<p style="font-size: 12px; color: #737373; line-height: 1.6;">Or paste this link into your browser:<br /><a href="${safeLink}" style="color: #737373;">${safeLink}</a></p>`,
-      `<p style="font-size: 12px; color: #737373;">If you didn't request this, you can ignore this email — your password won't change.</p>`,
+      `<p style="font-size: 12px; color: #737373;">If you didn't request this, you can ignore this email, your password won't change.</p>`,
       `</div>`
     ].join("\n")
   });

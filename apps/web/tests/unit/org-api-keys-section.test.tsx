@@ -95,7 +95,7 @@ describe("OrgApiKeysSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create key" }));
 
     expect(await screen.findByText("sk-test-secret")).toBeInTheDocument();
-    expect(screen.getByText("Copy your key now — it is shown only once.")).toBeInTheDocument();
+    expect(screen.getByText("Copy your key now. It is shown only once.")).toBeInTheDocument();
     const mint = calls.find((call) => call.method === "POST");
     expect(mint?.url).toBe("/api/keys");
     expect(JSON.parse(mint?.body ?? "{}")).toMatchObject({ orgId, name: "ci" });
@@ -144,7 +144,7 @@ describe("OrgApiKeysSection", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Rotate" }));
 
     expect(await screen.findByText("sk-rotated-secret")).toBeInTheDocument();
-    expect(screen.getByText("Copy your key now — it is shown only once.")).toBeInTheDocument();
+    expect(screen.getByText("Copy your key now. It is shown only once.")).toBeInTheDocument();
     // The rotation banner explains the overlap window instead of implying a cutover.
     expect(screen.getByText(/The previous key keeps working until/)).toBeInTheDocument();
     const rotate = calls.find((call) => call.method === "POST");

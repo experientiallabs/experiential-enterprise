@@ -157,7 +157,7 @@ export function DocsSearch() {
               )}
               {query.trim() === "" && (
                 <li className="px-2.5 py-3 text-[13px] text-muted">
-                  Type to search pages — try “quickstart” or “errors”.
+                  Type to search pages, try “quickstart” or “errors”.
                 </li>
               )}
             </ul>

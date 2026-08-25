@@ -9,7 +9,7 @@ import { getDataSource } from "@/lib/data-source";
 import { modelFamilyKey } from "@/lib/models-catalog/families";
 import { fetchPublicCatalog } from "@/lib/models-catalog/server";
 
-export const metadata = { title: "Admin — Promotions" };
+export const metadata = { title: "Admin · Promotions" };
 
 export const dynamic = "force-dynamic";
 

@@ -71,6 +71,11 @@ function termsSummary(promotion: ModelPromotion): string {
   return parts.join(" · ");
 }
 
+
+function toggleValue(list: string[], value: string): string[] {
+  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+}
+
 /** One public catalog model the panel can target (family key pre-derived). */
 export type PromotionModelOption = {
   slug: string;
@@ -78,72 +83,62 @@ export type PromotionModelOption = {
   familyKey: string;
 };
 
-type PromotionsBrowseProps = {
-  promotions: ModelPromotion[];
-  /** The public catalog: the family-expansion source and slug validator. */
-  models: PromotionModelOption[];
-};
-
 /**
- * The admin Promotions browse: one card of compact promotion rows (each
- * expandable in place to the full editor) plus a create form folded behind
- * the New promotion button. A scope targets provider lanes (checkboxes),
- * families (which expand client-side to the matching catalog slugs), and
- * individual slugs; the submitted model_slugs is the deduped, sorted union.
- * Money terms are edited in dollars and sent in micro-USD. Platform-admin
- * gated by the admin layout above; the gateway enforces these terms.
- * Mutations refresh the server list.
+ * The targeting draft shared by the create form and the in-place editor:
+ * provider lanes, families (expanded client-side to catalog slugs), audience
+ * org-labels, and manual slug adds/removals. Editing initializes from the
+ * stored promotion by reconstructing the create-form picture: the stored
+ * model_slugs is the resolved union, so manual = stored minus the family
+ * expansion and excluded = expansion minus stored.
  */
-export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) {
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
-  const [label, setLabel] = useState("");
-  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
-  const [selectedAudience, setSelectedAudience] = useState<string[]>([]);
-  const [manualSlugs, setManualSlugs] = useState<string[]>([]);
-  const [excludedSlugs, setExcludedSlugs] = useState<string[]>([]);
+function useTargetingDraft(models: PromotionModelOption[], initial?: ModelPromotion) {
+  const [providers, setProviders] = useState<string[]>(() =>
+    initial ? [...initial.providers] : []
+  );
+  const [families, setFamilies] = useState<string[]>(() =>
+    initial ? [...initial.family_keys] : []
+  );
+  const [audience, setAudience] = useState<string[]>(() =>
+    initial ? [...initial.audience_labels] : []
+  );
+  const [manualSlugs, setManualSlugs] = useState<string[]>(() => {
+    if (!initial) {
+      return [];
+    }
+    const expanded = new Set(
+      models
+        .filter((model) => initial.family_keys.includes(model.familyKey))
+        .map((model) => model.slug)
+    );
+    return initial.model_slugs.filter((slug) => !expanded.has(slug));
+  });
+  const [excludedSlugs, setExcludedSlugs] = useState<string[]>(() => {
+    if (!initial) {
+      return [];
+    }
+    const stored = new Set(initial.model_slugs);
+    return models
+      .filter((model) => initial.family_keys.includes(model.familyKey))
+      .map((model) => model.slug)
+      .filter((slug) => !stored.has(slug));
+  });
   const [slugInput, setSlugInput] = useState("");
   const [slugError, setSlugError] = useState<string | null>(null);
-  const [capUsd, setCapUsd] = useState("10");
-  const [discountCapUsd, setDiscountCapUsd] = useState("0");
-  const [percentOff, setPercentOff] = useState("0");
-  const [capScope, setCapScope] = useState<PromotionCapScope>("lifetime");
-  const [fundingScope, setFundingScope] = useState<PromotionFundingScope>("platform_funded");
-  const [displayOrder, setDisplayOrder] = useState("0");
-  const [active, setActive] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-
-  // Only families that actually have catalog models are offered: an empty
-  // family expands to nothing and cannot scope a promotion.
-  const familyOptions = useMemo(() => {
-    const present = new Set(models.map((model) => model.familyKey));
-    return Object.entries(FAMILY_LABELS).filter(([key]) => present.has(key));
-  }, [models]);
 
   const knownSlugs = useMemo(() => new Set(models.map((model) => model.slug)), [models]);
 
   // The effective slug set: family expansions plus manual adds, minus chips the
-  // admin removed, deduped and sorted — exactly what the create submits.
+  // admin removed, deduped and sorted. Exactly what submit sends.
   const effectiveSlugs = useMemo(() => {
     const expanded = models
-      .filter((model) => selectedFamilies.includes(model.familyKey))
+      .filter((model) => families.includes(model.familyKey))
       .map((model) => model.slug);
     const union = new Set([...expanded, ...manualSlugs]);
     for (const slug of excludedSlugs) {
       union.delete(slug);
     }
     return [...union].sort();
-  }, [models, selectedFamilies, manualSlugs, excludedSlugs]);
-
-  const canSubmit =
-    label.trim() !== "" && (effectiveSlugs.length > 0 || selectedProviders.length > 0);
-
-  function toggle(list: string[], value: string): string[] {
-    return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
-  }
+  }, [models, families, manualSlugs, excludedSlugs]);
 
   function addManualSlug() {
     const slug = slugInput.trim();
@@ -168,18 +163,189 @@ export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) 
     setExcludedSlugs((current) => (current.includes(slug) ? current : [...current, slug]));
   }
 
+  function reset() {
+    setProviders([]);
+    setFamilies([]);
+    setAudience([]);
+    setManualSlugs([]);
+    setExcludedSlugs([]);
+    setSlugInput("");
+    setSlugError(null);
+  }
+
+  return {
+    providers,
+    setProviders,
+    families,
+    setFamilies,
+    audience,
+    setAudience,
+    slugInput,
+    setSlugInput,
+    slugError,
+    setSlugError,
+    effectiveSlugs,
+    addManualSlug,
+    removeSlugChip,
+    reset,
+  };
+}
+
+type TargetingDraft = ReturnType<typeof useTargetingDraft>;
+
+/**
+ * The targeting controls, identical on create and edit: providers, families,
+ * audience org-labels, and the slug picker with removable chips. Parity is
+ * the contract; retargeting no longer requires recreating the promotion.
+ */
+function TargetingFields({
+  idPrefix,
+  models,
+  draft,
+}: {
+  idPrefix: string;
+  models: PromotionModelOption[];
+  draft: TargetingDraft;
+}) {
+  // Only families with catalog models present are offered: an empty family
+  // expands to nothing and cannot scope a promotion.
+  const familyOptions = useMemo(() => {
+    const present = new Set(models.map((model) => model.familyKey));
+    return Object.entries(FAMILY_LABELS).filter(([key]) => present.has(key));
+  }, [models]);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <fieldset className="m-0 border-0 p-0">
+        <legend className={LABEL_CLASS}>Providers (empty = any provider)</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+          {Object.entries(PROVIDER_LABELS).map(([key, providerName]) => (
+            <label className={CHECK_CLASS} key={key}>
+              <input
+                checked={draft.providers.includes(key)}
+                onChange={() => draft.setProviders((current) => toggleValue(current, key))}
+                type="checkbox"
+              />
+              {providerName}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="m-0 border-0 p-0">
+        <legend className={LABEL_CLASS}>Families (expand to their catalog models)</legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+          {familyOptions.map(([key, familyName]) => (
+            <label className={CHECK_CLASS} key={key}>
+              <input
+                checked={draft.families.includes(key)}
+                onChange={() => draft.setFamilies((current) => toggleValue(current, key))}
+                type="checkbox"
+              />
+              {familyName}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <AudienceControl idPrefix={idPrefix} value={draft.audience} onChange={draft.setAudience} />
+
+      <div>
+        <label className={LABEL_CLASS} htmlFor={`${idPrefix}-slug`}>
+          Add a model by slug
+        </label>
+        <div className="flex max-w-[420px] items-center gap-2">
+          <input
+            id={`${idPrefix}-slug`}
+            className={INPUT_CLASS}
+            type="text"
+            placeholder="qwen3.8-27b"
+            value={draft.slugInput}
+            onChange={(event) => {
+              draft.setSlugInput(event.target.value);
+              draft.setSlugError(null);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                draft.addManualSlug();
+              }
+            }}
+          />
+          <Button onClick={draft.addManualSlug} type="button" variant="ghost">
+            Add
+          </Button>
+        </div>
+        {draft.slugError && (
+          <p className="m-0 mt-1.5 text-[12.5px] text-danger">{draft.slugError}</p>
+        )}
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {draft.effectiveSlugs.map((slug) => (
+            <span className={CHIP_CLASS} key={slug}>
+              {slug}
+              <button
+                aria-label={`Remove ${slug}`}
+                className="cursor-pointer text-muted-2 hover:text-ink"
+                onClick={() => draft.removeSlugChip(slug)}
+                type="button"
+              >
+                <X aria-hidden size={11} strokeWidth={2} />
+              </button>
+            </span>
+          ))}
+          {draft.effectiveSlugs.length === 0 && draft.providers.length > 0 ? (
+            <p className="m-0 text-[12.5px] text-muted">
+              No models selected. Applies to all models served via the selected providers.
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type PromotionsBrowseProps = {
+  promotions: ModelPromotion[];
+  /** The public catalog: the family-expansion source and slug validator. */
+  models: PromotionModelOption[];
+};
+
+/**
+ * The admin Promotions browse: one card of compact promotion rows (each
+ * expandable in place to the full editor) plus a create form folded behind
+ * the New promotion button. A scope targets provider lanes (checkboxes),
+ * families (which expand client-side to the matching catalog slugs), and
+ * individual slugs; the submitted model_slugs is the deduped, sorted union.
+ * Money terms are edited in dollars and sent in micro-USD. Platform-admin
+ * gated by the admin layout above; the gateway enforces these terms.
+ * Mutations refresh the server list.
+ */
+export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) {
+  const router = useRouter();
+  const [creating, setCreating] = useState(false);
+  const [label, setLabel] = useState("");
+  const targeting = useTargetingDraft(models);
+  const [capUsd, setCapUsd] = useState("10");
+  const [discountCapUsd, setDiscountCapUsd] = useState("0");
+  const [percentOff, setPercentOff] = useState("0");
+  const [capScope, setCapScope] = useState<PromotionCapScope>("lifetime");
+  const [fundingScope, setFundingScope] = useState<PromotionFundingScope>("platform_funded");
+  const [displayOrder, setDisplayOrder] = useState("0");
+  const [active, setActive] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const canSubmit =
+    label.trim() !== "" &&
+    (targeting.effectiveSlugs.length > 0 || targeting.providers.length > 0);
+
   // Folding the form must also drop its draft: a canceled draft reappearing
   // on the next New promotion is a stale-submit hazard.
   function resetCreateForm() {
     setCreating(false);
     setLabel("");
-    setSelectedProviders([]);
-    setSelectedFamilies([]);
-    setSelectedAudience([]);
-    setManualSlugs([]);
-    setExcludedSlugs([]);
-    setSlugInput("");
-    setSlugError(null);
+    targeting.reset();
     setCapUsd("10");
     setDiscountCapUsd("0");
     setPercentOff("0");
@@ -201,10 +367,10 @@ export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) 
     try {
       const body: ModelPromotionCreateInput = {
         label: label.trim(),
-        model_slugs: effectiveSlugs,
-        family_keys: [...selectedFamilies].sort(),
-        providers: [...selectedProviders].sort(),
-        audience_labels: [...selectedAudience].sort(),
+        model_slugs: targeting.effectiveSlugs,
+        family_keys: [...targeting.families].sort(),
+        providers: [...targeting.providers].sort(),
+        audience_labels: [...targeting.audience].sort(),
         funding_scope: fundingScope,
         per_org_cap_micro_usd: dollarsToMicro(Number(capUsd) || 0),
         discount_cap_micro_usd: dollarsToMicro(Number(discountCapUsd) || 0),
@@ -240,7 +406,7 @@ export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) 
         <Card>
           <ul className="m-0 flex list-none flex-col divide-y divide-line p-0">
             {promotions.map((promotion) => (
-              <PromotionRow key={promotion.id} promotion={promotion} />
+              <PromotionRow key={promotion.id} models={models} promotion={promotion} />
             ))}
           </ul>
         </Card>
@@ -271,92 +437,7 @@ export function PromotionsBrowse({ promotions, models }: PromotionsBrowseProps) 
               />
             </div>
 
-            <fieldset className="m-0 border-0 p-0">
-              <legend className={LABEL_CLASS}>Providers (empty = any provider)</legend>
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {Object.entries(PROVIDER_LABELS).map(([key, providerName]) => (
-                  <label className={CHECK_CLASS} key={key}>
-                    <input
-                      checked={selectedProviders.includes(key)}
-                      onChange={() => setSelectedProviders((current) => toggle(current, key))}
-                      type="checkbox"
-                    />
-                    {providerName}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset className="m-0 border-0 p-0">
-              <legend className={LABEL_CLASS}>Families (expand to their catalog models)</legend>
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {familyOptions.map(([key, familyName]) => (
-                  <label className={CHECK_CLASS} key={key}>
-                    <input
-                      checked={selectedFamilies.includes(key)}
-                      onChange={() => setSelectedFamilies((current) => toggle(current, key))}
-                      type="checkbox"
-                    />
-                    {familyName}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <AudienceControl
-              idPrefix="create"
-              value={selectedAudience}
-              onChange={setSelectedAudience}
-            />
-
-            <div>
-              <label className={LABEL_CLASS} htmlFor="promo-slug">
-                Add a model by slug
-              </label>
-              <div className="flex max-w-[420px] items-center gap-2">
-                <input
-                  id="promo-slug"
-                  className={INPUT_CLASS}
-                  type="text"
-                  placeholder="qwen3.8-27b"
-                  value={slugInput}
-                  onChange={(event) => {
-                    setSlugInput(event.target.value);
-                    setSlugError(null);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addManualSlug();
-                    }
-                  }}
-                />
-                <Button onClick={addManualSlug} type="button" variant="ghost">
-                  Add
-                </Button>
-              </div>
-              {slugError && <p className="m-0 mt-1.5 text-[12.5px] text-danger">{slugError}</p>}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {effectiveSlugs.map((slug) => (
-                  <span className={CHIP_CLASS} key={slug}>
-                    {slug}
-                    <button
-                      aria-label={`Remove ${slug}`}
-                      className="cursor-pointer text-muted-2 hover:text-ink"
-                      onClick={() => removeSlugChip(slug)}
-                      type="button"
-                    >
-                      <X aria-hidden size={11} strokeWidth={2} />
-                    </button>
-                  </span>
-                ))}
-                {effectiveSlugs.length === 0 && selectedProviders.length > 0 ? (
-                  <p className="m-0 text-[12.5px] text-muted">
-                    No models selected. Applies to all models served via the selected providers.
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <TargetingFields draft={targeting} idPrefix="create" models={models} />
 
             <div className="flex flex-wrap items-end gap-3">
               <div className="w-[120px]">
@@ -551,7 +632,13 @@ function AudienceControl({
   );
 }
 
-function PromotionRow({ promotion }: { promotion: ModelPromotion }) {
+function PromotionRow({
+  promotion,
+  models,
+}: {
+  promotion: ModelPromotion;
+  models: PromotionModelOption[];
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(promotion.label);
@@ -564,7 +651,7 @@ function PromotionRow({ promotion }: { promotion: ModelPromotion }) {
   const [fundingScope, setFundingScope] = useState<PromotionFundingScope>(
     promotion.funding_scope
   );
-  const [audience, setAudience] = useState<string[]>(promotion.audience_labels);
+  const targeting = useTargetingDraft(models, promotion);
   const [active, setActive] = useState(promotion.active);
   const [displayOrder, setDisplayOrder] = useState(String(promotion.display_order));
   const [busy, setBusy] = useState<"save" | "remove" | null>(null);
@@ -575,14 +662,14 @@ function PromotionRow({ promotion }: { promotion: ModelPromotion }) {
     setError(null);
     setBusy("save");
     try {
-      // PUT is full-resource: the targeting arrays ride along unchanged (the
-      // row edits terms in place; retargeting means recreating the promotion).
+      // PUT is full-resource: the edited targeting rides along, so an admin
+      // retargets a live promotion in place instead of recreating it.
       const body: ModelPromotionCreateInput = {
         label: label.trim(),
-        model_slugs: promotion.model_slugs,
-        family_keys: promotion.family_keys,
-        providers: promotion.providers,
-        audience_labels: audience,
+        model_slugs: targeting.effectiveSlugs,
+        family_keys: [...targeting.families].sort(),
+        providers: [...targeting.providers].sort(),
+        audience_labels: [...targeting.audience].sort(),
         funding_scope: fundingScope,
         per_org_cap_micro_usd: dollarsToMicro(Number(capUsd) || 0),
         discount_cap_micro_usd: dollarsToMicro(Number(discountCapUsd) || 0),
@@ -707,7 +794,7 @@ function PromotionRow({ promotion }: { promotion: ModelPromotion }) {
 
       {editing ? (
         <div className="rounded-lg border border-line bg-surface-subtle/40 p-3">
-          <AudienceControl idPrefix={promotion.id} value={audience} onChange={setAudience} />
+          <TargetingFields draft={targeting} idPrefix={promotion.id} models={models} />
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="min-w-[160px] flex-1">
               <label className={LABEL_CLASS} htmlFor={`label-${promotion.id}`}>
@@ -821,7 +908,16 @@ function PromotionRow({ promotion }: { promotion: ModelPromotion }) {
               />
               Active
             </label>
-            <Button disabled={busy !== null} onClick={save} type="button" variant="primary">
+            <Button
+              disabled={
+                busy !== null ||
+                label.trim() === "" ||
+                (targeting.effectiveSlugs.length === 0 && targeting.providers.length === 0)
+              }
+              onClick={save}
+              type="button"
+              variant="primary"
+            >
               {busy === "save" ? "Saving..." : "Save"}
             </Button>
           </div>

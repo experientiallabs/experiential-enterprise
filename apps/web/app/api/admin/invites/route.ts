@@ -4,6 +4,7 @@ import { invitationLink } from "@/lib/admin/invitations";
 import { sendOrgInviteEmail, type InviteEmailResult } from "@/lib/admin/invite-email";
 import { createServiceRoleSupabaseClient, isPlatformAdmin } from "@/lib/auth/admin";
 import { isOrgAdmin } from "@/lib/auth/admin-orgs";
+import { requestOrigin } from "@/lib/auth/redirects";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
 import { parseInvitePayload } from "@/lib/admin/invites";
 import { jsonError, jsonOk } from "@/lib/http";
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       to: payload.email,
       orgName: org.name,
       role: payload.role,
-      inviteUrl: invitationLink(request.nextUrl.origin, invite.token)
+      inviteUrl: invitationLink(requestOrigin(request), invite.token)
     });
 
     return jsonOk({ ok: true, id: invite.id, email });

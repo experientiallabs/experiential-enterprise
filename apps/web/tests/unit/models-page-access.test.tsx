@@ -147,12 +147,15 @@ describe("models index (provider gate)", () => {
     expect(screen.getByText("Kimi K2.6")).toBeInTheDocument();
     expect(screen.getByText("Own Local")).toBeInTheDocument();
     expect(screen.queryByText("Claude Opus 5")).toBeNull();
-    // All visible models are preferred, so the Recommended band is the only
-    // band: the unconnected model contributed none.
+    // Both visible models are preferred, so they lead the always-open
+    // Recommended band, and each also folds into its own family band (the
+    // additive overlay: Kimi from "Kimi K2.6", Own from "Own Local"). The
+    // unconnected Claude Opus 5 was filtered out, so it contributes no
+    // "Claude" band — the gate, not the overlay, is what removed it.
     const bands = [...container.querySelectorAll("tbody .mono-label")].map(
       (node) => node.textContent
     );
-    expect(bands).toEqual(["Recommended"]);
+    expect(bands).toEqual(["Recommended", "Kimi", "Own"]);
   });
 
   it("leads with the recommended band and folds other providers once connected", async () => {
@@ -187,11 +190,13 @@ describe("models index (provider gate)", () => {
     expect(container.querySelector("h1")).toBeNull();
     expect(redirect).not.toHaveBeenCalled();
     // Recommended (preferred) models lead in their own always-open band; every
-    // other provider folds into a collapsed section below.
+    // model also folds into its family section below (the product owner, r2; amended
+    // 2026-08-24: the band is an additive overlay, so Kimi's family fold
+    // exists too instead of the starred model vanishing from it).
     const bands = [...container.querySelectorAll("tbody .mono-label")].map(
       (node) => node.textContent
     );
-    expect(bands).toEqual(["Recommended", "Qwen"]);
+    expect(bands).toEqual(["Recommended", "Kimi", "Qwen"]);
     // The recommended model is visible up front and priced.
     expect(screen.getByText("Kimi K2.6")).toBeInTheDocument();
     expect(screen.getByText("$0.54")).toBeInTheDocument();

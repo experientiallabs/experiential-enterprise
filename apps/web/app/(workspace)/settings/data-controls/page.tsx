@@ -35,7 +35,7 @@ export default async function DataControlsPage() {
         <p className="mt-2 max-w-[780px] text-muted text-[13px] leading-relaxed">
           Restrict which providers may serve this organization&apos;s traffic and require
           zero-data-retention or no-training postures. Posture flags reflect each provider&apos;s
-          documented API defaults — not customer-specific agreements.
+          documented API defaults, not customer-specific agreements.
         </p>
       </div>
       <ProviderPolicyPanel orgId={org.id} canManage={canManage} />

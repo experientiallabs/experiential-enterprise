@@ -26,7 +26,7 @@ export function CreditAccountsSection({ orgId }: CreditAccountsSectionProps) {
     >
       <p className="mono-label m-0">Credit accounts</p>
       <p className="m-0 max-w-[780px] text-[13px] leading-relaxed text-muted">
-        Credits, spend, and usage limits across your connected provider accounts — and how they
+        Credits, spend, and usage limits across your connected provider accounts, and how they
         change over time.
       </p>
       {/* Placeholder body until keys-P8 — the per-account rows, the snapshot

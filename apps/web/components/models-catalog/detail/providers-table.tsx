@@ -257,7 +257,7 @@ function Price({
   return (
     <span
       className="font-mono text-[12px] text-ink-soft"
-      title={estimated ? "Estimated price — not yet verified for this provider" : undefined}
+      title={estimated ? "Estimated price, not yet verified for this provider" : undefined}
     >
       {children}
       {estimated ? <span className="ml-0.5 text-muted-2">≈</span> : null}

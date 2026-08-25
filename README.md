@@ -70,8 +70,10 @@ AWS reads your standard credentials; Azure needs `-var subscription_id=<id>`;
 GCP needs `-var project=<id>`. The apply waits about 20 to 35 minutes while the
 VM builds from source (`ready_timeout_minutes`, default 40) and fails rather
 than print a login for a dead URL. `trial_login` prints the sign-in URL, admin
-email, and password; open it and use the password form. `terraform destroy`
-removes everything; see `infra/trial/README.md` for all inputs.
+email, and password. Open it, choose **Sign in with password**, and use those
+credentials. The ordinary form remains passwordless-first; trial VM email
+stays inside the stack's mail catcher. `terraform destroy` removes everything;
+see `infra/trial/README.md` for all inputs.
 
 ## Run locally
 

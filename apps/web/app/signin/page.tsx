@@ -4,11 +4,9 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { ContributionGrid } from "@/components/onboarding/ContributionGrid";
 import { YCombinatorMark } from "@/components/yc/YCombinatorMark";
 import { YcArrivalCapture } from "@/components/yc/YcArrivalCapture";
-import { YcWelcome } from "@/components/yc/YcWelcome";
-import { publicServingBaseUrl } from "@/components/world-models/endpoint-snippets";
+import { YcClaimRedirect } from "@/components/yc/YcClaimRedirect";
 import { safePrefillEmail } from "@/lib/auth/redirects";
 import { createServerSupabaseClient, getAuthenticatedUser } from "@/lib/auth/server";
-import { PLATFORM_WEB_URL } from "@/lib/llms-txt";
 
 import { SigninForm } from "./SigninForm";
 
@@ -132,8 +130,8 @@ export default async function SigninPage({ searchParams }: SigninPageProps) {
  * The YC-deal variant of /signin (the /yc short link lands here). Signed out:
  * the co-branded header, one line of the offer, and the same AuthForm — a
  * login here IS the claim, so the form threads the yc param through both auth
- * paths. Signed in: the form's spot renders the claim outcome, the org API
- * key, and the agent setup prompt (YcWelcome). There is no other YC page.
+ * paths. Signed in: YcClaimRedirect applies the claim and drops the founder
+ * into the app, where the welcome modal greets them. There is no other YC page.
  */
 async function YcDealPage({ prefillEmail }: { prefillEmail: string | null }) {
   const user = await getAuthenticatedUser();
@@ -176,16 +174,13 @@ async function YcDealPage({ prefillEmail }: { prefillEmail: string | null }) {
             className={`text-sm leading-relaxed ${signedIn ? "text-muted" : "text-onboard-muted"}`}
           >
             {signedIn
-              ? "Credits, your API key, and the setup prompt for your coding agent."
-              : "$526 in model credits for YC companies. Every model behind one OpenAI-compatible endpoint at exact provider cost — no markup, and your own provider keys ride free. Sign in and the credits are yours; your coding agent does the rest."}
+              ? "Applying your YC deal and opening your workspace."
+              : "$526 in model credits for YC companies. Every model behind one OpenAI-compatible endpoint at exact provider cost, no markup, and your own provider keys ride free. Sign in and the credits are yours; your coding agent does the rest."}
           </p>
         </div>
 
         {signedIn ? (
-          <YcWelcome
-            apiBaseUrl={publicServingBaseUrl()}
-            webBaseUrl={process.env.EXPLABS_WEBAPP_URL ?? PLATFORM_WEB_URL}
-          />
+          <YcClaimRedirect />
         ) : (
           <Suspense>
             <SigninForm inviteToken={null} prefillEmail={prefillEmail} ycDeal />

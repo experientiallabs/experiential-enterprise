@@ -37,6 +37,11 @@ from exp.runtime.models.providers.async_transport import ProviderDeadlineExceede
 
 from explabs.gateway.conftest import GatewayHarness, SeededAlias, SeededKey
 from explabs.gateway.control_store import PostgresGatewayControlStore
+from explabs.gateway.cost_annotation import (
+    CostRegistry,
+    SettledCost,
+    public_response_digest,
+)
 from explabs.gateway.db import GatewayDatabase
 from explabs.gateway.ledger import (
     _DEFERRED_ACCEPTS_MAX,
@@ -111,13 +116,14 @@ class _Authority:
         db: GatewayDatabase,
         *,
         drained: bool = False,
+        cost_registry: CostRegistry | None = None,
     ) -> None:
         self.harness = harness
         self.org_id: str = harness.seed_org(drained=drained)
         self.key: SeededKey = harness.seed_key(self.org_id, created_by=None)
         self.alias: SeededAlias = harness.activate_alias()
         self.store = PostgresGatewayControlStore(db)
-        self.ledger = PostgresAttemptLedger(db)
+        self.ledger = PostgresAttemptLedger(db, cost_registry=cost_registry)
 
     def accepted(
         self, content: str, *, idempotency_key: str | None = None
@@ -484,6 +490,142 @@ def test_zero_completion_insurance_never_charges_failed_or_empty_output(
     )
     assert billable is not None
     assert float(str(billable[0])) == pytest.approx(0.000108)
+
+
+@pytest.mark.integration
+def test_finalizing_settle_records_the_billed_cost_for_the_response(
+    gateway_harness: GatewayHarness, gateway_db: GatewayDatabase
+) -> None:
+    """The settle read-back hands the response annotator the billed truth.
+
+    The registry value must equal what the SQL settle computed — subset
+    pricing for cached/reasoning tokens included — so usage.cost can never
+    disagree with the ledger.
+    """
+    registry = CostRegistry()
+    authority = _Authority(gateway_harness, gateway_db, cost_registry=registry)
+    authorization, snapshot = authority.accepted("costed request")
+    deployment = _deployment().model_copy(
+        update={
+            "gateway": GatewayDeploymentMetadata(
+                prices=GatewayTokenPrices(
+                    input_micro_usd_per_million_tokens=1_000_000,
+                    cached_input_micro_usd_per_million_tokens=500_000,
+                    output_micro_usd_per_million_tokens=2_000_000,
+                    reasoning_micro_usd_per_million_tokens=4_000_000,
+                ),
+                pricing_source="test",
+            )
+        }
+    )
+    attempt_id = authority.ledger.start_attempt_sync(
+        snapshot=snapshot,
+        deployment=deployment,
+        attempt_ordinal=0,
+        route_depth=0,
+        maximum_cost_micro_usd=5_000,
+    )
+    authority.ledger.finish_attempt_sync(
+        attempt_id=attempt_id,
+        terminal_event=GatewayEvent(
+            kind=GatewayEventKind.COMPLETED,
+            sequence_number=3,
+            usage=GatewayUsage(
+                input_tokens=1_000,
+                cached_input_tokens=400,
+                output_tokens=100,
+                reasoning_tokens=40,
+            ),
+        ),
+        failure=None,
+    )
+
+    # 600 fresh input x 1 + 400 cached x 0.5 + 60 fresh output x 2
+    # + 40 reasoning x 4 micro-USD = 1080 micro-USD, billed in full.
+    settled = registry.pop(public_response_digest(authorization.request_id))
+    assert settled is not None
+    assert settled == SettledCost(billed_micro_usd=1_080, billing_source="host_managed")
+    assert settled.usage_fields() == {"cost": 0.00108}
+
+
+@pytest.mark.integration
+def test_byok_settle_records_zero_billed_with_the_attributed_cost(
+    gateway_harness: GatewayHarness, gateway_db: GatewayDatabase
+) -> None:
+    """customer_managed traffic reports cost 0 with the provider-list cost."""
+    registry = CostRegistry()
+    authority = _Authority(gateway_harness, gateway_db, cost_registry=registry)
+    authorization, snapshot = authority.accepted("byok request")
+    attempt_id = authority.ledger.start_attempt_sync(
+        snapshot=snapshot,
+        deployment=_deployment(billing_source=BillingSource.CUSTOMER_MANAGED),
+        attempt_ordinal=0,
+        route_depth=0,
+        maximum_cost_micro_usd=200,
+    )
+    authority.ledger.finish_attempt_sync(
+        attempt_id=attempt_id,
+        terminal_event=GatewayEvent(
+            kind=GatewayEventKind.COMPLETED,
+            sequence_number=3,
+            usage=GatewayUsage(input_tokens=100, output_tokens=10),
+        ),
+        failure=None,
+    )
+
+    settled = registry.pop(public_response_digest(authorization.request_id))
+    assert settled is not None
+    assert settled.billing_source == "customer_managed"
+    # Never charged: 0 cost on the wire even though the settled column holds
+    # the attributed 120 micro-USD (visible via usage history, not as a charge).
+    assert settled.billed_micro_usd == 120
+    assert settled.usage_fields() == {"cost": 0.0}
+
+
+@pytest.mark.integration
+def test_failed_and_nonfinalizing_settles_record_no_cost(
+    gateway_harness: GatewayHarness, gateway_db: GatewayDatabase
+) -> None:
+    """Only a clean finalizing terminal can carry usage.cost on the wire."""
+    registry = CostRegistry()
+    authority = _Authority(gateway_harness, gateway_db, cost_registry=registry)
+    authorization, snapshot = authority.accepted("failed then retried")
+    failed_attempt = authority.ledger.start_attempt_sync(
+        snapshot=snapshot,
+        deployment=_deployment(),
+        attempt_ordinal=0,
+        route_depth=0,
+        maximum_cost_micro_usd=200,
+    )
+    # A non-finalizing failure (the waterfall advances) records nothing.
+    authority.ledger.finish_attempt_sync(
+        attempt_id=failed_attempt,
+        terminal_event=None,
+        failure=GatewayFailure(
+            failure_class=GatewayFailureClass.PROVIDER_INTERNAL, safe_message="upstream 500"
+        ),
+        finalize_request=False,
+    )
+    assert registry.pop(public_response_digest(authorization.request_id)) is None
+
+    winning_attempt = authority.ledger.start_attempt_sync(
+        snapshot=snapshot,
+        deployment=_deployment(deployment_id="dep-secondary"),
+        attempt_ordinal=1,
+        route_depth=1,
+        maximum_cost_micro_usd=200,
+    )
+    authority.ledger.finish_attempt_sync(
+        attempt_id=winning_attempt,
+        terminal_event=GatewayEvent(
+            kind=GatewayEventKind.COMPLETED,
+            sequence_number=5,
+            usage=GatewayUsage(input_tokens=100, output_tokens=10),
+        ),
+        failure=None,
+    )
+    settled = registry.pop(public_response_digest(authorization.request_id))
+    assert settled == SettledCost(billed_micro_usd=120, billing_source="host_managed")
 
 
 @pytest.mark.integration

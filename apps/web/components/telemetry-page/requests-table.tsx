@@ -194,7 +194,7 @@ function CostCell({ request }: { request: UsageRequestItem }) {
   const estimateOnly = request.estimated_cost_usd > 0 && request.cost_usd === 0;
   const title =
     request.estimated_cost_usd > 0
-      ? `Real cost ${formatRequestCostUsd(request.real_cost_usd)} — ${formatRequestCostUsd(request.cost_usd)} billed to credits, ${formatRequestCostUsd(request.estimated_cost_usd)} estimated on your own provider key (never charged).`
+      ? `Real cost ${formatRequestCostUsd(request.real_cost_usd)}, ${formatRequestCostUsd(request.cost_usd)} billed to credits, ${formatRequestCostUsd(request.estimated_cost_usd)} estimated on your own provider key (never charged).`
       : `Real cost ${formatRequestCostUsd(request.real_cost_usd)}, billed to platform credits.`;
   return (
     <span className={estimateOnly ? "text-muted" : "text-ink"} title={title}>
@@ -286,8 +286,8 @@ function RequestRow({ orgId, request }: { orgId: string; request: UsageRequestIt
             onClick={() => void togglePrompt()}
             title={
               request.conversation_group === null
-                ? `Prompt group ${request.prompt_group} — click to view the captured prompt`
-                : `Prompt group ${request.prompt_group} · conversation ${request.conversation_group} — click to view the captured prompt`
+                ? `Prompt group ${request.prompt_group}, click to view the captured prompt`
+                : `Prompt group ${request.prompt_group} · conversation ${request.conversation_group}, click to view the captured prompt`
             }
             type="button"
           >
@@ -336,7 +336,7 @@ function RequestRow({ orgId, request }: { orgId: string; request: UsageRequestIt
       </td>
       <td
         className="whitespace-nowrap px-2 py-2 text-right tabular-nums text-muted"
-        title="Time to first token: provider dispatch to the first streamed token on the winning attempt. — when no first token was observed (e.g. failed before streaming, or served before TTFT capture shipped)."
+        title="Time to first token: provider dispatch to the first streamed token on the winning attempt. Empty when no first token was observed (e.g. failed before streaming, or served before TTFT capture shipped)."
       >
         {formatLatencyMs(request.ttft_ms)}
       </td>
@@ -373,7 +373,7 @@ function RequestRow({ orgId, request }: { orgId: string; request: UsageRequestIt
           )}
           {promptState === "missing" && (
             <span className="text-[11px] text-muted-2">
-              No captured prompt for this request — capture was off when it ran, or the
+              No captured prompt for this request, capture was off when it ran, or the
               30-day retention expired it.
             </span>
           )}

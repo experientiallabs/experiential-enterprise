@@ -48,7 +48,7 @@ export default async function ScimSettingsPage() {
         <p className="mt-2 max-w-[780px] text-muted text-[13px] leading-relaxed">
           Let your identity provider create and remove members of this organization
           automatically. Deprovisioning removes the member and, per your policy, revokes
-          the API keys they created — their accounts and other organizations are untouched.
+          the API keys they created, their accounts and other organizations are untouched.
         </p>
       </div>
       <ScimTokenSection orgId={org.id} scimBaseUrl={`${publicServingBaseUrl()}/scim/v2`} />

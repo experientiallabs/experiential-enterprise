@@ -340,7 +340,7 @@ export function OverviewView({ org, canSeeWorkspace, knownModelSlugs }: Overview
       {/* A self-contained summary of the org's active keys so a signed-in
           landing (and the YC "Go to Overview" flow) always shows one; full key
           management lives on /api-keys. The platform-credit balance card and
-          the per-provider credit accounts that once sat here are dropped —
+          the per-provider credit accounts that once sat here are dropped , 
           credit balances live on /credits now (the product owner, round-2/3). */}
       <ApiKeysSummary orgId={org.id} />
     </div>

@@ -12,7 +12,7 @@ Terraform state and the instance user data contain the generated admin password 
 - Caddy as the only public entry, on ports 80 and 443, serving HTTPS by default.
 - Fresh Supabase JWTs and stack keys minted per instance. The well-known local-dev values in `docker/.env.example` are never exposed.
 - A seeded admin login and a seeded demo organization.
-- Builds the stack from the cloned source on the VM by default, so nothing but this repository is required. Set `api_image` and `web_image` to published image repositories (for example `ghcr.io/experientiallabs/trial-api` and `trial-web`) for a faster prebuilt boot.
+- Builds the stack from the cloned source on the VM by default, so nothing but this repository is required. Set `api_image` and `web_image` to published image repositories (for example `ghcr.io/experientiallabs/experiential-api` and `experiential-web`) for a faster prebuilt boot.
 
 ## Prerequisites
 
@@ -30,7 +30,9 @@ terraform apply -var trial_tag=trial-20260822
 terraform output trial_login
 ```
 
-Open the URL from `trial_login` and paste the password from the same line.
+Open the URL from `trial_login`, choose **Sign in with password**, and paste
+the password from the same line. The default emailed-code form is retained for
+auth consistency, but trial VM mail stays inside the stack's mail catcher.
 
 Uses the default VPC, a `t3.xlarge`, and an Elastic IP. Ubuntu 24.04 comes from the canonical SSM public parameter.
 

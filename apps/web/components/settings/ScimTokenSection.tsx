@@ -116,7 +116,7 @@ export function ScimTokenSection({
         <div className="flex items-center justify-between gap-3 border border-line-strong rounded-lg bg-surface p-[18px]">
           <div className="min-w-0">
             <p className="m-0 mb-1 text-[13px] font-semibold text-ink">
-              Copy your SCIM token now — it is shown only once.
+              Copy your SCIM token now. It is shown only once.
             </p>
             <code className="block overflow-x-auto whitespace-nowrap font-mono text-[13px]">
               {mintedToken}

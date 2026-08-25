@@ -8,9 +8,16 @@ export type WelcomeTriggerClaim = {
   displayCreditUsd: number | null;
   /** Whether the modal should surface the API key. */
   showApiKey: boolean;
+  /** Whether the org carries the `yc` tag — drives the modal's YC co-branding. */
+  isYcCompany: boolean;
 };
 
-const SILENT: WelcomeTriggerClaim = { show: false, displayCreditUsd: null, showApiKey: false };
+const SILENT: WelcomeTriggerClaim = {
+  show: false,
+  displayCreditUsd: null,
+  showApiKey: false,
+  isYcCompany: false
+};
 
 /**
  * Claim the re-triggerable welcome celebration for the signed-in user in their
@@ -37,12 +44,14 @@ export async function claimWelcomeTrigger(): Promise<WelcomeTriggerClaim> {
       show?: unknown;
       displayCreditUsd?: unknown;
       showApiKey?: unknown;
+      isYcCompany?: unknown;
     } | null;
     const amount = payload?.displayCreditUsd;
     return {
       show: payload?.show === true,
       displayCreditUsd: typeof amount === "number" && Number.isFinite(amount) ? amount : null,
-      showApiKey: payload?.showApiKey === true
+      showApiKey: payload?.showApiKey === true,
+      isYcCompany: payload?.isYcCompany === true
     };
   } catch {
     return SILENT;

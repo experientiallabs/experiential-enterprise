@@ -666,10 +666,50 @@ def _promotion_covered_slugs(
     return {slug for slug in visible_slugs if providers_by_slug.get(slug, set()) & provider_set}
 
 
+def _viewer_satisfies_audience(
+    client: SupabaseClient,
+    viewer_orgs: set[str] | None,
+    required_labels: tuple[str, ...],
+    label_cache: dict[str, set[str]],
+) -> bool:
+    """Whether the viewer may SEE an audience-scoped promotion.
+
+    Mirrors gateway_promo_state's audience predicate at display time: the org
+    must carry EVERY required org_label. A viewer spanning several orgs sees
+    the promotion when any one of them qualifies (that org's traffic would be
+    discounted). Platform admins (viewer_orgs is None) see every promotion —
+    they operate the deployment. Anonymous viewers and unlabeled orgs do not:
+    advertising a discount the money path will refuse is a mis-stated price.
+    """
+    if not required_labels:
+        return True
+    if viewer_orgs is None:
+        return True
+    if not viewer_orgs:
+        return False
+    if not label_cache:
+        for row in _paged(
+            lambda offset: (
+                client.table("org_labels")
+                .select("org_id, key")
+                .in_("org_id", sorted(viewer_orgs))
+                .order("org_id")
+                .range(offset, offset + _POSTGREST_PAGE_SIZE - 1)
+            )
+        ):
+            label_cache.setdefault(str(row["org_id"]), set()).add(str(row["key"]))
+        # A sentinel entry marks the cache as loaded even when the viewer's
+        # orgs carry no labels at all, so we never refetch per promotion.
+        label_cache.setdefault("", set())
+    required = set(required_labels)
+    return any(required <= label_cache.get(org, set()) for org in viewer_orgs)
+
+
 def _fetch_promotions(
     client: SupabaseClient,
     visible_slugs: set[str],
     providers_by_slug: dict[str, set[str]],
+    viewer_orgs: set[str] | None,
 ) -> tuple[PromotionView, ...]:
     """Load active promotions, each resolved to the viewer's visible slugs.
 
@@ -679,7 +719,10 @@ def _fetch_promotions(
     explicit membership, or — for a promotion whose covers_all_models flag an
     admin deliberately set — every visible model, narrowed to the promotion's
     lanes when it has any. Empty membership WITHOUT the flag (a
-    cascade-emptied scope) resolves to nothing, exactly like enforcement. A
+    cascade-emptied scope) resolves to nothing, exactly like enforcement. An
+    audience-scoped promotion (``audience_labels``) is shown only to viewers
+    whose org carries every required label — the same predicate the money
+    path applies — so no viewer is shown a discount they cannot receive. A
     promotion that resolves to no visible model is dropped so the section
     never dangles on hidden rows. Active-only server-side; both reads page
     past the PostgREST row cap.
@@ -707,8 +750,13 @@ def _fetch_promotions(
         members.setdefault(str(row["promotion_id"]), []).append(str(row["slug"]))
 
     promotions: list[PromotionView] = []
+    org_label_cache: dict[str, set[str]] = {}
     for row in promo_rows:
         if row.get("display_order") is None:
+            continue
+        if not _viewer_satisfies_audience(
+            client, viewer_orgs, _string_tuple(row.get("audience_labels")), org_label_cache
+        ):
             continue
         promotion_id = str(row["id"])
         providers = _string_tuple(row.get("providers"))
@@ -1086,6 +1134,7 @@ def list_models(
     max_input_micro_usd_per_million: Annotated[int | None, Query(ge=0)] = None,
     supports: Annotated[str | None, Query(min_length=1)] = None,
     owner: Annotated[Literal["org"] | None, Query()] = None,
+    audience_org: Annotated[str | None, Query(min_length=1)] = None,
     sort: Annotated[ModelSort, Query()] = "preferred",
     order: Annotated[SortOrder | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=1000)] = 500,
@@ -1109,10 +1158,30 @@ def list_models(
         supports=supports,
     )
     viewer_orgs = _viewer_org_ids(client, actor)
-    models = [row for row in _all_rows(client, "models") if _model_visible(row, viewer_orgs)]
-    if owner == "org":
-        models = [row for row in models if row.get("owning_org_id") is not None]
-    slug_by_model_id = {str(model["id"]): str(model["slug"]) for model in models}
+    # Promotions are audience-checked per ORGANIZATION, and a workspace acts as
+    # exactly one org at a time. When the caller names its acting org, the
+    # audience predicate narrows to that org alone (a user whose OTHER org
+    # qualifies must not be shown a discount this org's traffic will not get).
+    # The org must be one the viewer may act for; platform admins may name any.
+    audience_orgs = viewer_orgs
+    if audience_org is not None:
+        if viewer_orgs is not None and audience_org not in viewer_orgs:
+            msg = "audience_org is not one of your organizations"
+            raise ApiError(msg, status_code=403)
+        audience_orgs = {audience_org}
+    visible_models = [
+        row for row in _all_rows(client, "models") if _model_visible(row, viewer_orgs)
+    ]
+    # The owner filter narrows the RETURNED rows only. Promotions (and the
+    # deployment alias overlay) resolve against everything the viewer can see:
+    # an owner=org overlay read still reports the viewer's full promotion set,
+    # which the storefront swaps in for its cached anonymous one.
+    models = (
+        [row for row in visible_models if row.get("owning_org_id") is not None]
+        if owner == "org"
+        else visible_models
+    )
+    slug_by_model_id = {str(model["id"]): str(model["slug"]) for model in visible_models}
     observed = fetch_observed_stats(client)
     deployments_by_model: dict[str, list[JsonObject]] = {}
     for row in _all_rows(client, "model_providers"):
@@ -1129,7 +1198,7 @@ def list_models(
     ]
     ordered = _sorted_entries(entries, sort, order)
     page = ordered[offset : offset + limit]
-    # Promotions are population-level and org-agnostic; surface those whose
+    # Promotions are audience-resolved for this viewer; surface those whose
     # models are visible to this viewer so the promo section never dangles on a
     # hidden row. The per-slug provider sets resolve lane-scoped promotions to
     # the models those lanes actually serve.
@@ -1142,7 +1211,9 @@ def list_models(
         for model_id, deployments in deployments_by_model.items()
         if model_id in slug_by_model_id
     }
-    promotions = _fetch_promotions(client, set(slug_by_model_id.values()), providers_by_slug)
+    promotions = _fetch_promotions(
+        client, set(slug_by_model_id.values()), providers_by_slug, audience_orgs
+    )
     return ModelListView(
         models=tuple(
             CatalogModelView(

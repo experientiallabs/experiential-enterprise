@@ -32,10 +32,10 @@ export function safePrefillEmail(value: string | null): string | null {
 }
 
 /**
- * The origin the BROWSER is on, for building auth redirects and the OAuth
- * callback URL. Behind the standalone server and an ingress,
- * `request.nextUrl.origin` is the bind address (http://0.0.0.0:3000), not the
- * public host, redirects built from it strand the browser on 0.0.0.0 and
+ * The origin the BROWSER is on, for building auth redirects, OAuth callback
+ * URLs, and organization invite links. Behind the standalone server and an
+ * ingress, `request.nextUrl.origin` is the bind address (http://0.0.0.0:3000),
+ * not the public host; URLs built from it strand the browser on 0.0.0.0 and
  * hand GoTrue an off-allow-list callback. Prefer the proxy's forwarded
  * headers (first value only: proxies append, and a spoofed second entry must
  * not win), then the Host header the browser sent, then the bind origin as

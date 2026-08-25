@@ -149,7 +149,7 @@ export function ParamsRail({ entry, state, onChange, lastUsage }: ParamsRailProp
             composer.
           </p>
           <p className="mt-1.5 text-[11px] leading-4 text-muted-2">
-            Inline image and file serving over the gateway is still landing — attachments may not
+            Inline image and file serving over the gateway is still landing, attachments may not
             change the reply yet.
           </p>
         </section>

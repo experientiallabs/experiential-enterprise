@@ -567,7 +567,7 @@ function ProviderSection({
                 className={`${INPUT_CLASS} max-w-[520px]`}
                 onChange={(event) => setClientSecret(event.target.value)}
                 placeholder={
-                  provider?.has_client_secret ? "Stored — enter a value to rotate" : undefined
+                  provider?.has_client_secret ? "Stored, enter a value to rotate" : undefined
                 }
                 type="password"
                 value={clientSecret}

@@ -7,7 +7,10 @@ const createAdminExperientialCloud = vi.hoisted(() => vi.fn());
 const updateAdminExperientialCloud = vi.hoisted(() => vi.fn());
 const setAdminExperientialCloudStatus = vi.hoisted(() => vi.fn());
 
+const revalidateModelsCatalog = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/auth/admin", () => ({ isPlatformAdmin }));
+vi.mock("@/lib/models-catalog/server", () => ({ revalidateModelsCatalog }));
 vi.mock("@/lib/data-source", async () => {
   const actual = await vi.importActual<typeof import("@/lib/data-source")>("@/lib/data-source");
   return {
@@ -149,6 +152,32 @@ describe("admin experiential-cloud routes", () => {
       base_url: "https://vllm-2:8000/v1",
       pricing_source: undefined
     });
+  });
+
+  it("busts the shared catalog cache on lane create and update", async () => {
+    isPlatformAdmin.mockResolvedValue(true);
+    createAdminExperientialCloud.mockResolvedValue({ slug: "deepseek-v4-flash" });
+    updateAdminExperientialCloud.mockResolvedValue({});
+    await POST(
+      jsonRequest("http://localhost/api/admin/experiential-cloud", "POST", {
+        slug: "deepseek-v4-flash",
+        provider_model_id: "deepseek-v4-flash"
+      })
+    );
+    await PATCH(
+      jsonRequest(`http://localhost/api/admin/experiential-cloud/${EC_ID}`, "PATCH", {
+        provider_model_id: "deepseek-v4-flash-r2"
+      }),
+      idContext(EC_ID)
+    );
+    setAdminExperientialCloudStatus.mockResolvedValue({});
+    await STATUS_POST(
+      jsonRequest(`http://localhost/api/admin/experiential-cloud/${EC_ID}/status`, "POST", {
+        status: "active"
+      }),
+      idContext(EC_ID)
+    );
+    expect(revalidateModelsCatalog).toHaveBeenCalledTimes(3);
   });
 
   it("PATCH is a not-found for a non-admin", async () => {

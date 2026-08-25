@@ -51,7 +51,7 @@ export default async function OverviewPage() {
           spend-time error. Spend-unlock is decoupled from login. */}
       {!spendUnlocked && <VerifyEmailBanner email={user.email} />}
       {/* No page title (the product owner, round-2): the header is just the signed-in
-          identity — email and active org. */}
+          identity, email and active org. */}
       <p className="m-0 text-[13px] leading-relaxed text-muted">
         {user.email === null ? org.name : `${user.email} · ${org.name}`}
       </p>

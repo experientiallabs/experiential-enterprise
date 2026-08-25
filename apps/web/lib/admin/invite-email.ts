@@ -34,7 +34,7 @@ export async function sendInvitationEmail(input: TenantInviteEmailInput): Promis
   const org = escapeHtml(input.orgName);
   return sendInviteEmail({
     to: input.to,
-    subject: `You're invited to Experiential Labs — ${input.orgName}`,
+    subject: `You're invited to Experiential Labs, ${input.orgName}`,
     heading: "You're invited to Experiential Labs",
     intro:
       `You've been invited to build simulations on the Experiential Labs platform. ` +

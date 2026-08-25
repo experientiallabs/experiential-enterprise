@@ -23,7 +23,9 @@ import {
   formatTokenCount
 } from "@/lib/models-catalog/format";
 import { PLATFORM_WEB_URL } from "@/lib/llms-txt";
-import { fetchModelDetail } from "@/lib/models-catalog/server";
+import { promoChipsBySlug, promoEffectivePrice } from "@/lib/models-catalog/promotions";
+import { PromoChipBadge, PromoPrice } from "@/components/models-catalog/badges";
+import { fetchModelDetail, fetchPublicCatalog } from "@/lib/models-catalog/server";
 import { servedThroughExperiential } from "@/lib/models-catalog/serving";
 import { formatPerMillionUsd } from "@/lib/money";
 import { isReservedRouteSlug, modelsPath, playgroundPath, reservedSlugRedirect } from "@/lib/routes";
@@ -58,9 +60,14 @@ export default async function ModelDetailPage({
   // The catalog detail is a public read independent of the viewer's session, so
   // fetch it concurrently with the auth cookie read instead of after it — the
   // two were a serial waterfall on this page's hot path (the product owner, perf pass).
-  const [user, detail] = await Promise.all([
+  // The promotion read rides the shared cached public catalog (promotions are
+  // population-level) and is additive: a failed read just renders no promo.
+  const [user, detail, promoChip] = await Promise.all([
     getAuthenticatedUser(),
-    fetchModelDetail(modelSlug)
+    fetchModelDetail(modelSlug),
+    fetchPublicCatalog()
+      .then((catalog) => promoChipsBySlug(catalog.promotions).get(modelSlug) ?? null)
+      .catch(() => null)
   ]);
   if (detail === null) {
     notFound();
@@ -81,6 +88,16 @@ export default async function ModelDetailPage({
 
   const cheapestInput = cheapestInputMicro({ model, providers });
   const cheapestOutput = cheapestOutputMicro({ model, providers });
+  // Lane-aware promo repricing: a lane-scoped promo discounts only its covered
+  // lanes' best price; the effective floor never exceeds the list price.
+  const inputPrice = promoEffectivePrice(
+    promoChip,
+    providers.map((row) => ({ provider: row.provider, micro: row.input_micro_usd_per_million }))
+  );
+  const outputPrice = promoEffectivePrice(
+    promoChip,
+    providers.map((row) => ({ provider: row.provider, micro: row.output_micro_usd_per_million }))
+  );
   // Serving truth: is this model usable through Experiential on platform
   // credits (any active host-managed route), or is it BYOK-only?
   const served = servedThroughExperiential(providers);
@@ -115,16 +132,19 @@ export default async function ModelDetailPage({
                 your org only
               </span>
             ) : null}
-            <span
-              className={
-                served
-                  ? "inline-flex items-center rounded-full bg-accent-soft px-2 py-px font-mono text-[10px] uppercase tracking-wide text-accent"
-                  : "inline-flex items-center rounded-full bg-warning-soft px-2 py-px font-mono text-[10px] uppercase tracking-wide text-warning"
-              }
-              data-testid="serving-badge"
-            >
-              {served ? "on Experiential" : "bring your own key"}
-            </span>
+            {/* Promo truth beats serving truth in this slot: a promoted model
+                wears its FREE / % off chip; a served, unpromoted model wears
+                nothing ("on Experiential" was cut per product decision); only
+                the BYOK warning remains as a badge. */}
+            {promoChip !== null ? <PromoChipBadge chip={promoChip} /> : null}
+            {!served ? (
+              <span
+                className="inline-flex items-center rounded-full bg-warning-soft px-2 py-px font-mono text-[10px] uppercase tracking-wide text-warning"
+                data-testid="serving-badge"
+              >
+                bring your own key
+              </span>
+            ) : null}
           </div>
           {model.description !== null ? (
             <p className="mt-2 max-w-[780px] text-[13px] leading-relaxed text-muted">
@@ -159,8 +179,26 @@ export default async function ModelDetailPage({
       <div className="flex flex-wrap items-stretch gap-3">
         <Stat label="Context" value={formatTokenCount(model.context_window)} />
         <Stat label="Max output" value={formatTokenCount(model.max_output_tokens)} />
-        <Stat label="Input from" value={`${formatPerMillionUsd(cheapestInput)} / M`} />
-        <Stat label="Output from" value={`${formatPerMillionUsd(cheapestOutput)} / M`} />
+        <Stat
+          label="Input from"
+          value={
+            promoChip !== null && inputPrice.effective !== inputPrice.list ? (
+              <PromoPrice effective={inputPrice.effective} list={inputPrice.list} />
+            ) : (
+              `${formatPerMillionUsd(cheapestInput)} / M`
+            )
+          }
+        />
+        <Stat
+          label="Output from"
+          value={
+            promoChip !== null && outputPrice.effective !== outputPrice.list ? (
+              <PromoPrice effective={outputPrice.effective} list={outputPrice.list} />
+            ) : (
+              `${formatPerMillionUsd(cheapestOutput)} / M`
+            )
+          }
+        />
         <Stat label="Released" value={formatReleaseDate(model.release_date)} />
         {model.category !== null ? <Stat label="Category" value={model.category} /> : null}
       </div>
@@ -207,7 +245,7 @@ export default async function ModelDetailPage({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex min-w-[130px] flex-col justify-center gap-1 rounded-lg border border-line bg-surface px-4 py-3">
       <p className="mono-label m-0">{label}</p>

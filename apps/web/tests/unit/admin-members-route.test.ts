@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createServiceRoleSupabaseClient = vi.hoisted(() => vi.fn());
 const isPlatformAdmin = vi.hoisted(() => vi.fn());
@@ -23,6 +24,21 @@ function request(payload: unknown) {
     value: new URL(value.url)
   });
   return value;
+}
+
+// Production binds 0.0.0.0:3000, so nextUrl.origin is the bind address. Invite
+// URLs must follow requestOrigin (forwarded host/proto), not that bind origin.
+function bindAddressRequest(payload: unknown): NextRequest {
+  return new NextRequest("http://0.0.0.0:3000/api/admin/orgs/org-1/members", {
+    body: JSON.stringify(payload),
+    headers: {
+      "content-type": "application/json",
+      host: "0.0.0.0:3000",
+      "x-forwarded-host": "platform.experientiallabs.ai",
+      "x-forwarded-proto": "https"
+    },
+    method: "POST"
+  });
 }
 
 function adminClient(
@@ -113,6 +129,10 @@ beforeEach(() => {
   isPlatformAdmin.mockResolvedValue(true);
   requireAuthenticatedUser.mockResolvedValue({ id: "operator-1" });
   sendOrgInviteEmail.mockResolvedValue({ sent: true });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("POST /api/admin/orgs/[orgId]/members", () => {
@@ -236,5 +256,31 @@ describe("POST /api/admin/orgs/[orgId]/members", () => {
       role: "admin",
       inviteUrl: "https://platform.example/signin?invite=existing-token"
     });
+  });
+
+  it("builds invite URLs from the public origin, not the 0.0.0.0 bind address", async () => {
+    // Empty, not unset: a valid ambient EXPLABS_WEBAPP_URL would otherwise
+    // win over the forwarded headers this case is pinning.
+    vi.stubEnv("EXPLABS_WEBAPP_URL", "");
+    const client = adminClient(null);
+    createServiceRoleSupabaseClient.mockReturnValue(client);
+    sendOrgInviteEmail.mockResolvedValue({ sent: false, reason: "Resend is not configured" });
+
+    const response = await POST(
+      bindAddressRequest({ email: "new@example.com", role: "admin" }),
+      context
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.inviteUrl).toBe(
+      "https://platform.experientiallabs.ai/signin?invite=invite-token"
+    );
+    expect(body.inviteUrl).not.toContain("0.0.0.0");
+    expect(sendOrgInviteEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inviteUrl: "https://platform.experientiallabs.ai/signin?invite=invite-token"
+      })
+    );
   });
 });

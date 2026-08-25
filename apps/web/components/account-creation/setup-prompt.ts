@@ -28,17 +28,17 @@
  * @returns Steps 1–4 as a single block, starting "1." and ending "regardless.".
  */
 export function buildInstantSignupSteps(web: string, api: string): string {
-  return `1. Ask me for my email address — it is the one thing signup needs. Ask me
+  return `1. Ask me for my email address, it is the one thing signup needs. Ask me
    directly ("What's your email? I'll create your Experiential Labs account
    with it.") and wait for my answer. Use exactly the address I give you.
    Never invent or guess an address, and never go looking for one in my
    files, git config, or shell history. Call the result MY_EMAIL.
 
-2. Create my account instantly — no browser, no password, no code.
+2. Create my account instantly, no browser, no password, no code.
    POST ${web}/api/signup/instant   (no auth)
    Header: Content-Type: application/json
    Body: {"email": "<MY_EMAIL>"}
-   On 200 capture: api_key (an xpl_ key — this is mine, keep it secret), org_id,
+   On 200 capture: api_key (an xpl_ key, this is mine, keep it secret), org_id,
    credits_granted, verification_required, overview_url. Handle the others:
      - 409 account_exists  -> I already have an account; stop and tell me to
        sign in at ${web}/signin to get a key (don't retry with another email).
@@ -53,7 +53,7 @@ export function buildInstantSignupSteps(web: string, api: string): string {
    api_key  = EXPLABS_API_KEY (the xpl_ key from step 2). One header only:
    Authorization: Bearer <api_key>.
 
-4. Confirm the key is live — this does NOT spend credits.
+4. Confirm the key is live, this does NOT spend credits.
    GET ${api}/v1/models with the key -> the models my account can call. Do NOT
    make a paid chat completion yet: my credits stay locked until I verify my
    email (I do that at the very end), and a paid call would be refused until

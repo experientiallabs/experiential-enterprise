@@ -10,6 +10,7 @@ type Ready = {
   displayCreditUsd: number | null;
   apiKey: string | null;
   showApiKey: boolean;
+  isYcCompany: boolean;
 };
 
 /**
@@ -67,15 +68,18 @@ export function WelcomeTrigger({
         return;
       }
       // Only reach for a key when the admin opted in; otherwise skip the read
-      // entirely (no mint) and show the credits + prompts alone.
-      const apiKey = claim.showApiKey ? (await fetchWelcomeData())?.mintedSecret ?? null : null;
+      // entirely (no mint) and show the credits + prompts alone. On a re-trigger
+      // we force a FRESH mint so every member sees a usable key, even one whose
+      // org already holds a (hash-stored, unshowable) key.
+      const apiKey = claim.showApiKey ? (await fetchWelcomeData(true))?.mintedSecret ?? null : null;
       if (!mountedRef.current || claimedOrgRef.current !== activeOrgId) {
         return;
       }
       setReady({
         displayCreditUsd: claim.displayCreditUsd,
         apiKey,
-        showApiKey: claim.showApiKey
+        showApiKey: claim.showApiKey,
+        isYcCompany: claim.isYcCompany
       });
     })();
   }, [activeOrgId]);
@@ -91,6 +95,7 @@ export function WelcomeTrigger({
       showApiKey={ready.showApiKey}
       webBaseUrl={webBaseUrl}
       apiBaseUrl={apiBaseUrl}
+      variant={ready.isYcCompany ? "yc" : undefined}
       onClose={() => setReady(null)}
     />
   );

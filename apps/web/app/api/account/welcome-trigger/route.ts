@@ -2,6 +2,7 @@ import { resolveActiveOrg } from "@/lib/active-org";
 import { requireAuthorizedOrgIds } from "@/lib/auth/orgs";
 import { createServerSupabaseClient, requireAuthenticatedUser } from "@/lib/auth/server";
 import { readLaunchGrantUsd } from "@/lib/billing/launch-grant";
+import { orgIsYcCompany } from "@/lib/billing/tool-accounts-server";
 import { jsonError, jsonOk } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
@@ -63,16 +64,22 @@ export async function POST(): Promise<Response> {
     // PostgREST may serialize a numeric column as a string to preserve
     // precision; coerce before comparing, and fall back to the launch grant.
     const chosen = Number(trigger.display_credit_usd);
-    const displayCreditUsd =
+    const [displayCreditUsd, isYcCompany] = await Promise.all([
       Number.isFinite(chosen) && chosen > 0
-        ? chosen
-        : await readLaunchGrantUsd(supabase, org.id);
+        ? Promise.resolve(chosen)
+        : readLaunchGrantUsd(supabase, org.id),
+      // Cosmetic co-branding only — a tag-read failure must not error the route
+      // after the one-shot showing was already claimed; degrade to non-YC.
+      orgIsYcCompany(org.id).catch(() => false)
+    ]);
 
     return jsonOk(
       {
         show: true,
         displayCreditUsd: displayCreditUsd !== null && displayCreditUsd > 0 ? displayCreditUsd : null,
-        showApiKey: trigger.show_api_key === true
+        showApiKey: trigger.show_api_key === true,
+        // Drives the modal's YC co-branding on the re-trigger path.
+        isYcCompany
       },
       { "cache-control": "no-store" }
     );

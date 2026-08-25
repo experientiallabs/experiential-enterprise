@@ -41,9 +41,6 @@ function renderForm(props: { prefillEmail?: string | null; onSuccess?: ReturnTyp
       onSuccess={onSuccess}
     />
   );
-  // Trial build: password mode is the default; these suites cover the
-  // emailed-code flow, so switch to it first.
-  fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
   return onSuccess;
 }
 
@@ -65,7 +62,7 @@ describe("safePrefillEmail", () => {
 });
 
 describe("AuthForm email-code flow", () => {
-  it("code login via the toggle: no password field, Continue sends the code, code signs in", async () => {
+  it("defaults to code login: no password field, Continue sends the code, code signs in", async () => {
     const fetchMock = stubAuthFetch();
     const onSuccess = renderForm({});
 

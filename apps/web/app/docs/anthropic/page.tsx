@@ -35,7 +35,7 @@ export default function AnthropicDocsPage() {
           <Code>POST {baseUrl}/v1/messages</Code> speaks the Anthropic Messages
           wire protocol. Authenticate with the Anthropic-style{" "}
           <Code>x-api-key</Code> header or with{" "}
-          <Code>Authorization: Bearer</Code> — either carries the same{" "}
+          <Code>Authorization: Bearer</Code>, either carries the same{" "}
           <Code>xpl_</Code> key. Name any slug from{" "}
           <Code>GET {baseUrl}/v1/models</Code> as the model.
         </Prose>
@@ -126,7 +126,7 @@ function messagesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       '  -H "x-api-key: $EXPLABS_API_KEY" \\',
       '  -H "anthropic-version: 2023-06-01" \\',
       '  -H "Content-Type: application/json" \\',
-      `  -d '{"model": "claude-opus-5", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'`
+      `  -d '{"model": "qwen3.8-27b", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'`
     ].join("\n"),
     python: [
       "import os",
@@ -135,7 +135,7 @@ function messagesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "",
       `client = Anthropic(base_url="${baseUrl}", api_key=os.environ["EXPLABS_API_KEY"])`,
       "message = client.messages.create(",
-      '    model="claude-opus-5",',
+      '    model="qwen3.8-27b",',
       "    max_tokens=1024,",
       '    messages=[{"role": "user", "content": "Hello"}],',
       ")",
@@ -149,7 +149,7 @@ function messagesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "  apiKey: process.env.EXPLABS_API_KEY,",
       "});",
       "const message = await client.messages.create({",
-      '  model: "claude-opus-5",',
+      '  model: "qwen3.8-27b",',
       "  max_tokens: 1024,",
       '  messages: [{ role: "user", content: "Hello" }],',
       "});",
@@ -165,7 +165,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       '  -H "x-api-key: $EXPLABS_API_KEY" \\',
       '  -H "anthropic-version: 2023-06-01" \\',
       '  -H "Content-Type: application/json" \\',
-      `  -d '{"model": "claude-opus-5", "max_tokens": 1024, "stream": true, "messages": [{"role": "user", "content": "Hello"}]}'`
+      `  -d '{"model": "qwen3.8-27b", "max_tokens": 1024, "stream": true, "messages": [{"role": "user", "content": "Hello"}]}'`
     ].join("\n"),
     python: [
       "import os",
@@ -174,7 +174,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "",
       `client = Anthropic(base_url="${baseUrl}", api_key=os.environ["EXPLABS_API_KEY"])`,
       "with client.messages.stream(",
-      '    model="claude-opus-5",',
+      '    model="qwen3.8-27b",',
       "    max_tokens=1024,",
       '    messages=[{"role": "user", "content": "Hello"}],',
       ") as stream:",
@@ -189,7 +189,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "  apiKey: process.env.EXPLABS_API_KEY,",
       "});",
       "const stream = await client.messages.create({",
-      '  model: "claude-opus-5",',
+      '  model: "qwen3.8-27b",',
       "  max_tokens: 1024,",
       '  messages: [{ role: "user", content: "Hello" }],',
       "  stream: true,",

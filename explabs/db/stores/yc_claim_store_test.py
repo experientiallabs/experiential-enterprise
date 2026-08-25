@@ -102,6 +102,34 @@ def test_apply_launch_grant_is_idempotent_per_org(supabase: FakeSupabaseClient) 
     assert len(labels) == 1
 
 
+def test_apply_launch_grant_skips_a_pre_tagged_org(supabase: FakeSupabaseClient) -> None:
+    """A pre-tagged org gets no second grant on a later /yc claim.
+
+    An operator backfill can credit an org via a different source and tag it
+    `yc`; the label is the applied-promotion gate, so a subsequent self-serve
+    claim grants nothing — the path cannot double-claim.
+    """
+    supabase.tables.setdefault("org_labels", []).append(
+        {
+            "id": "pre-tagged-label",
+            "org_id": ORG_ID,
+            "key": "yc",
+            "created_by": USER_ID,
+            "created_at": "2026-01-01T00:00:00Z",
+        }
+    )
+
+    result = YcClaimStore(supabase).apply_launch_grant(ORG_ID, YC_GRANT_USD, None, USER_ID)
+
+    assert result.newly_applied is False
+    yc_launch = [
+        row
+        for row in supabase.tables.get("credit_ledger", [])
+        if row.get("org_id") == ORG_ID and row.get("source") == "yc_launch"
+    ]
+    assert yc_launch == []
+
+
 def test_apply_launch_grant_honors_an_explicit_amount_and_expiry(
     supabase: FakeSupabaseClient,
 ) -> None:
@@ -155,12 +183,16 @@ def test_process_expiring_grants_claws_back_unspent(supabase: FakeSupabaseClient
     # grant is already expired (2020) and nothing was spent since it landed, so
     # its unspent part is the full $526 — but the clawback is capped at the live
     # $523 balance so the balance never goes negative.
-    balance_before = cast("float", org["credit_granted_usd"]) - cast("float", org["billable_spend_usd"])
+    balance_before = cast("float", org["credit_granted_usd"]) - cast(
+        "float", org["billable_spend_usd"]
+    )
     assert balance_before == 523.0
 
     processed = store.process_expiries()
     assert processed == 1
-    balance_after = cast("float", org["credit_granted_usd"]) - cast("float", org["billable_spend_usd"])
+    balance_after = cast("float", org["credit_granted_usd"]) - cast(
+        "float", org["billable_spend_usd"]
+    )
     assert balance_after == 0.0
     # Idempotent: a second pass processes nothing.
     assert store.process_expiries() == 0

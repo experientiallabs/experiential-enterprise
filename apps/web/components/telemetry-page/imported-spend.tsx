@@ -31,7 +31,7 @@ export function ImportedSpendSection({ imported }: ImportedSpendSectionProps) {
       <header className="flex flex-wrap items-center gap-2.5 border-b border-line px-3.5 py-2.5">
         <h2 className="m-0 text-[13px] font-semibold text-ink">Imported historical spend</h2>
         <span className="text-[11px] text-muted-2">
-          Already-paid provider spend, imported for your records — never charged here.
+          Already-paid provider spend, imported for your records, never charged here.
         </span>
         <span className="ml-auto tabular-nums text-[12px] font-medium text-ink">
           {formatCostUsd(imported.totals.cost_usd)}

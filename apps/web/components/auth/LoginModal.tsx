@@ -231,6 +231,7 @@ function WelcomeReveal({
       webBaseUrl={webBaseUrl}
       apiBaseUrl={apiBaseUrl}
       creditCaption="in free credits to start"
+      variant={data.isYcCompany ? "yc" : undefined}
       onClose={onClose}
     />
   );

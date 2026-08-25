@@ -37,13 +37,6 @@ function stubOtp(verify: { status: number; payload: unknown }) {
 }
 
 async function signInWithCode(email = "new.user@example.com") {
-  // Trial build: the plain form defaults to password mode, so switch to the
-  // emailed-code flow first. Invite renders are already code-only (the toggle
-  // is hidden for them), hence the conditional.
-  const toggle = screen.queryByRole("button", { name: "Sign in with email code" });
-  if (toggle !== null) {
-    fireEvent.click(toggle);
-  }
   fireEvent.change(screen.getByLabelText("Email"), { target: { value: email } });
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   const codeInput = await screen.findByLabelText("Sign-in code");
@@ -147,7 +140,6 @@ describe("SigninForm", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<SigninForm inviteToken={null} prefillEmail={null} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "a@b.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 

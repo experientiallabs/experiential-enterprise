@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 import {
   allowEmailSend,
+  allowSigninAttempt,
   allowSignupStart,
   clientIp,
   releaseEmailSend
@@ -61,6 +62,34 @@ describe("allowEmailSend", () => {
     const email = `retry-${Math.random()}@experientiallabs.ai`;
     expect(allowEmailSend(email)).toBe(true);
     releaseEmailSend(email);
+    expect(allowEmailSend(email)).toBe(true);
+  });
+});
+
+describe("allowSigninAttempt", () => {
+  it("bounds attempts per source IP (the enumeration bound)", () => {
+    const ip = `signin-ip-${Math.random()}`;
+    // Each attempt uses a distinct address so only the per-IP budget can trip.
+    for (let i = 0; i < 10; i += 1) {
+      expect(allowSigninAttempt(ip, `probe-${i}-${Math.random()}@company.com`)).toBe(true);
+    }
+    expect(allowSigninAttempt(ip, `probe-final-${Math.random()}@company.com`)).toBe(false);
+  });
+
+  it("bounds attempts per target address (the brute-force bound)", () => {
+    const email = `victim-${Math.random()}@company.com`;
+    // Each attempt uses a distinct IP so only the per-address budget can trip.
+    for (let i = 0; i < 10; i += 1) {
+      expect(allowSigninAttempt(`signin-src-${i}-${Math.random()}`, email)).toBe(true);
+    }
+    expect(allowSigninAttempt(`signin-src-final-${Math.random()}`, email)).toBe(false);
+  });
+
+  it("does not consume the email-send cooldown a rejected login must fall back on", () => {
+    // A failed password login followed by "email me a sign-in code" must still
+    // be able to send: the signin limiter is a separate bucket from allowEmailSend.
+    const email = `fallback-${Math.random()}@company.com`;
+    expect(allowSigninAttempt(`fallback-ip-${Math.random()}`, email)).toBe(true);
     expect(allowEmailSend(email)).toBe(true);
   });
 });

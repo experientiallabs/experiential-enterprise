@@ -153,7 +153,7 @@ export function gatewayRequestOutcomeReason(
     case "expired_before_dispatch":
       return "The request expired before it could reach a provider.";
     case "unknown_after_crash":
-      return "The outcome is unknown — the worker handling this request stopped before it settled.";
+      return "The outcome is unknown, the worker handling this request stopped before it settled.";
     case "failed":
       return "The request failed upstream.";
   }

@@ -16,6 +16,8 @@ from explabs.db import query_timing
 from explabs.gateway.conftest import GatewayHarness
 from explabs.gateway.db import (
     _POOL_CONNECT_TIMEOUT_SECONDS,
+    GATEWAY_POOL_MAX_SIZE,
+    GATEWAY_POOL_MIN_SIZE,
     GatewayDatabase,
     _reset_pooled_connection,
 )
@@ -38,7 +40,18 @@ def test_pool_bounds_the_connect_timeout() -> None:
     try:
         pool_kwargs = cast("dict[str, object]", db._pool.kwargs)  # noqa: SLF001
         assert pool_kwargs["connect_timeout"] == _POOL_CONNECT_TIMEOUT_SECONDS
+        assert pool_kwargs["prepare_threshold"] is None
         assert _POOL_CONNECT_TIMEOUT_SECONDS > 0
+    finally:
+        db.close()
+
+
+def test_default_pool_is_lazy_and_bounded_for_autoscaled_workers() -> None:
+    """One pod must not reserve the old ten session-mode connections."""
+    db = GatewayDatabase("postgresql://nobody@127.0.0.1:1/nowhere")
+    try:
+        assert db._pool.min_size == GATEWAY_POOL_MIN_SIZE == 0  # noqa: SLF001
+        assert db._pool.max_size == GATEWAY_POOL_MAX_SIZE == 4  # noqa: SLF001
     finally:
         db.close()
 

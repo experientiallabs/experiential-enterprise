@@ -33,3 +33,10 @@ export type OrgEntitlementsList = {
   org_id: string;
   entitlements: OrgEntitlement[];
 };
+
+/** One grant row labeled with its org, for the admin Enterprise tab. */
+export type DeploymentEntitlement = OrgEntitlement & {
+  org_id: string;
+  org_slug: string | null;
+  org_name: string | null;
+};

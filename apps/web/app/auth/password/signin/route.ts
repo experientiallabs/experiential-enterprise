@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { createServiceRoleSupabaseClient } from "@/lib/auth/admin";
 import { safePrefillEmail } from "@/lib/auth/redirects";
 import { carryAuthCookies, createRouteSupabaseClient } from "@/lib/auth/server";
+import { signinMethodsForEmail } from "@/lib/auth/signin-methods";
+import { allowSigninAttempt, clientIp } from "@/lib/auth/signup-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +14,22 @@ export const dynamic = "force-dynamic";
 // (/auth/password/reset). Signup never sets a user-known password, so a fresh
 // account has none until it opts in.
 //
-//   200 { ok, created:false }        signed in; the session cookies ride back
-//   401 { code:"invalid_credentials" } wrong email/password OR no password set
-//   400 { code:"invalid_request" }   malformed email/body
+//   200 { ok, created:false }      signed in; the session cookies ride back
+//   401 { code:"no_account" }      no account exists for that email
+//   401 { code:"wrong_password" }  the account exists but the password was
+//                                  rejected (also covers a passwordless account
+//                                  that has never set a password; the UI then
+//                                  offers reset AND the emailed-code path)
+//   429 { code:"rate_limited" }    per-IP / per-address attempt limit
+//   400 { code:"invalid_request" } malformed email/body
 //
-// The 401 is deliberately uniform: it never distinguishes "no such account",
-// "no password set on this account", and "wrong password", so password sign-in
-// leaks no account/credential-existence oracle (the emailed-code path is the
-// account-existence-neutral entry, same as today).
+// The 401 DELIBERATELY distinguishes account existence (owner decision,
+// 2026-08-24): a rejected sign-in now tells the caller whether to create an
+// account or fix a wrong password, instead of the old uniform message. This is
+// the same bounded-enumeration posture already accepted on /signup: it leaks
+// account existence, so it is bounded by the per-IP + per-address attempt limits
+// (lib/auth/signup-rate-limit). The emailed-code path (/auth/otp) STAYS
+// account-existence-neutral; only this password path distinguishes.
 type SigninPayload = {
   email: string;
   password: string;
@@ -36,15 +47,42 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ code: "invalid_request", error: message }, { status: 400 });
   }
 
+  // The distinguishing 401 below is an account-existence oracle, so bound it the
+  // same way signup is: per-IP (caps cross-address probing) and per-address
+  // (blunts brute-forcing one account). Attempted before touching GoTrue so a
+  // limited caller cannot even test a credential.
+  if (!allowSigninAttempt(clientIp(request), payload.email)) {
+    return NextResponse.json(
+      { code: "rate_limited", error: "Too many sign-in attempts; try again shortly." },
+      { status: 429 }
+    );
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email: payload.email,
     password: payload.password
   });
   if (error !== null || data.user === null) {
-    return NextResponse.json(
-      { code: "invalid_credentials", error: "Invalid email or password." },
-      { status: 401 }
-    );
+    // Distinguish "no account" from "wrong password" using the same service-role
+    // lookup the marketing signup uses (signin_methods_for_email). An
+    // inconclusive lookup (null result, or the service-role client itself
+    // failing to construct on a misconfigured pod) falls back to wrong_password
+    // so a transient internal failure never manufactures a "no account" signal
+    // for an address that may well exist. The construction is inside the try so
+    // a missing SUPABASE_SERVICE_ROLE_KEY degrades to the fallback, not a 500.
+    let methods: Awaited<ReturnType<typeof signinMethodsForEmail>> = null;
+    try {
+      methods = await signinMethodsForEmail(createServiceRoleSupabaseClient(), payload.email);
+    } catch {
+      methods = null;
+    }
+    if (methods !== null && methods.length === 0) {
+      return NextResponse.json(
+        { code: "no_account", error: "No account found for that email." },
+        { status: 401 }
+      );
+    }
+    return NextResponse.json({ code: "wrong_password", error: "Wrong password." }, { status: 401 });
   }
 
   // Carry the Supabase Set-Cookie writes (session) onto a fresh ok response,

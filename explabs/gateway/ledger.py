@@ -36,9 +36,11 @@ from exp.runtime.gateway.ledger import (
 )
 from exp.runtime.gateway.sqlite.store import InvalidVirtualKeyError, SystemGatewayClock
 from exp.runtime.models.providers.async_transport import ProviderDeadlineExceeded
+from psycopg.rows import TupleRow
 
 from explabs.gateway.capture import PromptCaptureBuffer, PromptCaptureWriter
 from explabs.gateway.control_store import api_key_uuid, organization_uuid
+from explabs.gateway.cost_annotation import CostRegistry, SettledCost
 from explabs.gateway.db import GatewayDatabase
 from explabs.gateway.lease_shadow import LeaseKey, LeaseShadow, ShadowProbe
 from explabs.gateway.lineage import RequestLineage, RequestLineageTracker
@@ -119,6 +121,7 @@ class PostgresAttemptLedger:
         lineage: RequestLineageTracker | None = None,
         capture_buffer: PromptCaptureBuffer | None = None,
         capture_writer: PromptCaptureWriter | None = None,
+        cost_registry: CostRegistry | None = None,
     ) -> None:
         """Bind one pooled database and injectable clock.
 
@@ -136,6 +139,9 @@ class PostgresAttemptLedger:
                 store fills at authorize for capture-on orgs; None disables.
             capture_writer: Background writer persisting captures off the hot
                 path (see explabs/gateway/capture.py); None disables.
+            cost_registry: Settled-cost handoff to the response annotator
+                (see explabs/gateway/cost_annotation.py); None disables the
+                read-back entirely.
         """
         self._db = db
         self._clock = SystemGatewayClock() if clock is None else clock
@@ -143,6 +149,7 @@ class PostgresAttemptLedger:
         self._lineage = lineage
         self._capture_buffer = capture_buffer
         self._capture_writer = capture_writer
+        self._cost_registry = cost_registry
         # Deferred accepts: request_id -> (authorization, accept-time deadline).
         # Entries are removed by the first successful combined reservation or
         # by finish_request; a worker crash simply loses in-process state along
@@ -648,6 +655,16 @@ class PostgresAttemptLedger:
     ) -> None:
         """Blocking body of :meth:`finish_attempt` (tests and thread callers)."""
         state, failure_class, error_message, usage = _terminal_values(terminal_event, failure)
+        # The winning settle's billing outcome rides back to the response
+        # annotator; only a clean finalizing terminal with reported usage can
+        # ever carry a usage block on the wire, so only that case reads back.
+        read_back_cost = (
+            self._cost_registry is not None
+            and finalize_request
+            and state in {"completed", "incomplete"}
+            and usage is not None
+            and usage.has_token_counts
+        )
         try:
             with self._db.atomic_call() as cursor:
                 cursor.execute(
@@ -679,8 +696,46 @@ class PostgresAttemptLedger:
                         first_token_at,
                     ),
                 )
+                if read_back_cost:
+                    # Same autocommit checkout: the settle above is already
+                    # committed, so this reads the row it wrote. The settled
+                    # values (not a recomputation) become the response's
+                    # usage.cost, so promo funding, discounts, and the
+                    # zero-completion insurance are reflected exactly as
+                    # billed. Best-effort: a failed read only omits the cost
+                    # field, never disturbs the committed settle.
+                    self._record_settled_cost(cursor, attempt_id)
         except psycopg.errors.DatabaseError as error:
             _raise_mapped(error)
+
+    def _record_settled_cost(self, cursor: psycopg.Cursor[TupleRow], attempt_id: str) -> None:
+        """Read one settled attempt's billing outcome into the cost registry."""
+        if self._cost_registry is None:  # pragma: no cover - guarded by caller
+            return
+        try:
+            cursor.execute(
+                "select request_id, billing_source, budget_settled_micro_usd"
+                " from public.gateway_attempts where attempt_id = %s",
+                (attempt_id,),
+            )
+            row = cursor.fetchone()
+        except psycopg.errors.DatabaseError:
+            logger.warning(
+                "settled-cost read-back failed for attempt %s; the response omits usage.cost",
+                attempt_id,
+                exc_info=True,
+            )
+            return
+        if row is None:
+            return
+        request_id, billing_source, settled = row
+        self._cost_registry.record(
+            request_id=str(request_id),
+            settled=SettledCost(
+                billed_micro_usd=0 if settled is None else int(str(settled)),
+                billing_source=str(billing_source),
+            ),
+        )
 
     async def finish_request(
         self,

@@ -13,6 +13,25 @@ describe("modelFamily", () => {
       "anthropic"
     );
   });
+
+  it("classifies the gpt-5.6 codename variants as GPT, not Solar/Luma", () => {
+    // Sol/Luna/Terra are OpenAI codenames whose tokens brush other brands
+    // (Solar, Luma); the \bgpt token must win for the whole line.
+    for (const [slug, name] of [
+      ["gpt-5.6-sol", "GPT-5.6 Sol"],
+      ["gpt-5.6-sol-pro", "GPT-5.6 Sol Pro"],
+      ["gpt-5.6-luna", "GPT-5.6 Luna"],
+      ["gpt-5.6-luna-pro", "GPT-5.6 Luna Pro"],
+      ["gpt-5.6-terra", "GPT-5.6 Terra"],
+      ["gpt-5.6-terra-pro", "GPT-5.6 Terra Pro"]
+    ]) {
+      expect(modelFamily(makeEntry({ icon: null, slug, display_name: name })).key).toBe("openai");
+    }
+    // The real Solar family keeps its own key.
+    expect(modelFamily(makeEntry({ icon: null, slug: "solar-pro4", display_name: "Solar Pro 4" })).key).toBe(
+      "upstage"
+    );
+  });
 });
 
 describe("isSelfHostable", () => {

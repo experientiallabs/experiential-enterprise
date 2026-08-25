@@ -39,10 +39,12 @@ from explabs.gateway.catalog import (
     OrgAwareRouteResolver,
     OrgProviderPolicy,
     PlatformCatalogRows,
+    PricedAliasMetadata,
     ProviderDataControls,
     _RefreshReleaser,
     build_catalog_state,
     build_gateway_catalog,
+    listing_pricing_by_alias,
 )
 from explabs.gateway.credentials import (
     LOCAL_PLACEHOLDER_CREDENTIAL,
@@ -2309,3 +2311,157 @@ def test_refresh_releaser_does_not_cache_empty_probe_values() -> None:
 
     assert releaser.probe("conn-a") == ""
     assert releaser.resolve("conn-a") == "late-secret"
+
+
+def test_priced_alias_metadata_renders_the_reasoning_rate() -> None:
+    """The platform extension adds the reasoning rate in exp's pricing shape."""
+    metadata = PricedAliasMetadata(
+        input_micro_usd_per_million_tokens=2_500_000,
+        output_micro_usd_per_million_tokens=10_000_000,
+        reasoning_micro_usd_per_million_tokens=12_000_000,
+    )
+    assert metadata.extension_fields() == {
+        "pricing": {
+            "input_micro_usd_per_million_tokens": 2_500_000,
+            "output_micro_usd_per_million_tokens": 10_000_000,
+            "reasoning_micro_usd_per_million_tokens": 12_000_000,
+        },
+    }
+    without_reasoning = PricedAliasMetadata(input_micro_usd_per_million_tokens=1)
+    assert without_reasoning.extension_fields()["pricing"] == {
+        "input_micro_usd_per_million_tokens": 1
+    }
+
+
+def test_listing_pricing_publishes_the_primary_rung_rates() -> None:
+    """Every alias maps to its primary routed deployment's declared rates.
+
+    The public fixture model is a WATERFALL (exp's own published_metadata
+    stays silent for multi-deployment pools), so the platform publishes the
+    primary rung — the priced openai deployment, not the unpriced anthropic
+    fallback.
+    """
+    build = build_gateway_catalog(_fixture_rows(), environment=_environment())
+    state = build_catalog_state(build, environment=_environment(), release=_release)
+
+    pricing = listing_pricing_by_alias(state)
+    public_plan = _plan_by_name(build, "gw-public-model")
+    public = pricing[("gw-public-model", public_plan.revision_id)]
+    assert public.extension_fields()["pricing"] == {
+        "input_micro_usd_per_million_tokens": 2_500_000,
+        "output_micro_usd_per_million_tokens": 10_000_000,
+    }
+    # The org-custom model publishes its own deployment's rates too.
+    org_plan = _plan_by_name(build, "gw-org-model")
+    assert ("gw-org-model", org_plan.revision_id) in pricing
+
+
+def test_published_metadata_serves_pricing_through_the_resolver_seam() -> None:
+    """Both /v1/models lanes read this seam and publish the same pricing.
+
+    The native plane's listing callback and the fallback route both call
+    ``routes.published_metadata``, so pricing published here reaches the
+    listing regardless of which plane serves it.
+    """
+    build = build_gateway_catalog(_fixture_rows(), environment=_environment())
+    state = build_catalog_state(build, environment=_environment(), release=_release)
+    resolver = OrgAwareRouteResolver(_StaticStateProvider(state))
+    plan = _plan_by_name(build, "gw-public-model")
+
+    published = resolver.published_metadata(
+        alias=plan.alias_name,
+        revision_id=plan.revision_id,
+        catalog_sha256=plan.catalog_sha256,
+    )
+    assert published is not None
+    fields = published.extension_fields()
+    assert fields["pricing"] == {
+        "input_micro_usd_per_million_tokens": 2_500_000,
+        "output_micro_usd_per_million_tokens": 10_000_000,
+    }
+
+    # The per-generation map is cached: the same state answers by identity.
+    again = resolver.published_metadata(
+        alias=plan.alias_name,
+        revision_id=plan.revision_id,
+        catalog_sha256=plan.catalog_sha256,
+    )
+    assert again is published
+
+    # An alias the state does not know publishes nothing.
+    assert (
+        resolver.published_metadata(
+            alias="never-served",
+            revision_id=plan.revision_id,
+            catalog_sha256=plan.catalog_sha256,
+        )
+        is None
+    )
+
+    # Revision-precise: another plan's revision can never read this plan's
+    # price through the shared name (org authorities publish THEIR plan).
+    org_plan = _plan_by_name(build, "gw-org-model")
+    assert (
+        resolver.published_metadata(
+            alias=plan.alias_name,
+            revision_id=org_plan.revision_id,
+            catalog_sha256=org_plan.catalog_sha256,
+        )
+        is None
+    )
+
+
+def test_org_scoped_revision_publishes_its_own_rates() -> None:
+    """An org's granted revision lists the rates its route actually bills.
+
+    Greptile P1 on the first cut: pricing keyed by alias name alone let a
+    same-named public plan shadow an org-scoped plan. Keying by
+    ``(alias, revision_id)`` — the exact identity the listing lookup presents
+    — makes an org authority publish its own plan's primary-rung rates.
+    """
+    org_row = _provider_row(
+        id=_ORG_OPENAI_ROW_ID,
+        model_id=_ORG_MODEL_ID,
+        provider_model_id="ft:gpt-5:org-a",
+        billing_source="customer_managed",
+        owning_org_id=_ORG_A,
+        input_micro_usd_per_million=7_000_000,
+        output_micro_usd_per_million=21_000_000,
+        created_at=_NOW + timedelta(minutes=2),
+    )
+    rows = PlatformCatalogRows(
+        models=(
+            _model_row(),
+            _model_row(id=_ORG_MODEL_ID, slug="gw-org-model", owning_org_id=_ORG_A),
+        ),
+        providers=(_provider_row(), org_row),
+        waterfalls=(),
+        connections=(_connection_row(),),
+    )
+    build = build_gateway_catalog(rows, environment=_environment())
+    state = build_catalog_state(build, environment=_environment(), release=_release)
+    resolver = OrgAwareRouteResolver(_StaticStateProvider(state))
+
+    org_plan = _plan_by_name(build, "gw-org-model")
+    org_published = resolver.published_metadata(
+        alias=org_plan.alias_name,
+        revision_id=org_plan.revision_id,
+        catalog_sha256=org_plan.catalog_sha256,
+    )
+    assert org_published is not None
+    assert org_published.extension_fields()["pricing"] == {
+        "input_micro_usd_per_million_tokens": 7_000_000,
+        "output_micro_usd_per_million_tokens": 21_000_000,
+    }
+
+    public_plan = _plan_by_name(build, "gw-public-model")
+    public_published = resolver.published_metadata(
+        alias=public_plan.alias_name,
+        revision_id=public_plan.revision_id,
+        catalog_sha256=public_plan.catalog_sha256,
+    )
+    assert public_published is not None
+    assert public_published.extension_fields()["pricing"] == {
+        "input_micro_usd_per_million_tokens": 2_500_000,
+        "output_micro_usd_per_million_tokens": 10_000_000,
+    }

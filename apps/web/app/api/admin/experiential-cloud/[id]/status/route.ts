@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isPlatformAdmin } from "@/lib/auth/admin";
 import { getDataSource } from "@/lib/data-source";
 import { jsonError } from "@/lib/http";
+import { revalidateModelsCatalog } from "@/lib/models-catalog/server";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest, context: Context): Promise<Resp
       );
     }
     const deployment = await getDataSource().setAdminExperientialCloudStatus(id, status);
+    // Lane ON/OFF renders on the shared cached public catalog; bust it.
+    revalidateModelsCatalog();
     return NextResponse.json(deployment);
   } catch (error) {
     return jsonError(error);

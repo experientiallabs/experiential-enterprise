@@ -87,7 +87,7 @@ export default function AuthenticationDocsPage() {
         </DocsList>
         <Prose>A customer key deliberately cannot:</Prose>
         <DocsList>
-          <li>Mint or revoke API keys — that is a web-session action (<Code>POST /api/keys</Code> is not key-callable).</li>
+          <li>Mint or revoke API keys: that is a web-session action (<Code>POST /api/keys</Code> is not key-callable).</li>
           <li>Change another key&apos;s limits.</li>
           <li>Reach platform-admin routes.</li>
         </DocsList>

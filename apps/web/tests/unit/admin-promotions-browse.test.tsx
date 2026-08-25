@@ -220,6 +220,64 @@ describe("PromotionsBrowse", () => {
     });
   });
 
+  it("edit exposes the same targeting controls as create (parity)", () => {
+    renderPanel();
+    // Create side: the four targeting surfaces.
+    openCreateForm();
+    const targetingControls = [
+      "Providers (empty = any provider)",
+      "Families (expand to their catalog models)",
+      "Limit to account types (empty = all accounts)",
+      "Add a model by slug"
+    ];
+    for (const control of targetingControls) {
+      expect(screen.getAllByText(control).length).toBeGreaterThan(0);
+    }
+    // Edit side: the same four, rendered a second time inside the editor.
+    fireEvent.click(screen.getByRole("button", { name: "Edit Qwen launch" }));
+    for (const control of targetingControls) {
+      expect(screen.getAllByText(control).length).toBe(2);
+    }
+  });
+
+  it("retargets a live promotion in place: models, family, providers, audience persist", async () => {
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Qwen launch" }));
+    // The stored scope reconstructs as the create-form picture: family qwen
+    // with qwen3.8-72b excluded leaves the one stored chip.
+    const editor = screen.getByRole("button", { name: "Save" }).closest("div.rounded-lg");
+    expect(editor).not.toBeNull();
+    const scope = within(editor as HTMLElement);
+    // Swap the family scope for one explicit model of another family.
+    fireEvent.click(scope.getByRole("checkbox", { name: "Qwen" }));
+    const input = scope.getByLabelText("Add a model by slug");
+    fireEvent.change(input, { target: { value: "gpt-5.6-luna" } });
+    fireEvent.click(scope.getByRole("button", { name: "Add" }));
+    fireEvent.click(scope.getByRole("checkbox", { name: "Bedrock" }));
+    fireEvent.click(scope.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    const [url, init] = lastFetchCall();
+    expect(url).toBe(`/api/admin/model-promotions/${PROMO_ID}`);
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body ?? "{}")).toMatchObject({
+      model_slugs: ["gpt-5.6-luna"],
+      family_keys: [],
+      providers: ["bedrock"]
+    });
+  });
+
+  it("blocks saving an edit whose retargeted scope matches nothing", () => {
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Qwen launch" }));
+    const editor = screen.getByRole("button", { name: "Save" }).closest("div.rounded-lg");
+    const scope = within(editor as HTMLElement);
+    // Dropping the family empties the scope entirely: no slugs, no providers.
+    fireEvent.click(scope.getByRole("checkbox", { name: "Qwen" }));
+    expect(scope.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("removes a promotion via DELETE keyed on the id after confirmation", async () => {
     renderPanel();
     fireEvent.click(screen.getByRole("button", { name: "Remove Qwen launch" }));

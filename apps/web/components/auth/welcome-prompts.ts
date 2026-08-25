@@ -45,8 +45,8 @@ what you do at each step. Never invent a model id or a credential.
 
 1. List the models my key can call.
    GET ${api}/v1/models with header "Authorization: Bearer $EXPLABS_API_KEY".
-   Use the returned ids EXACTLY. For a cheap first call pick the smallest Qwen
-   (qwen3.5-9b at launch).
+   Use the returned ids EXACTLY. For a free first call pick the promotional
+   Qwen (qwen3.8-27b at launch).
 
 2. Make one tiny call. Send model + messages ONLY: no temperature, top_p, or
    other sampling params (some models reject them and the call comes back as
@@ -58,7 +58,7 @@ what you do at each step. Never invent a model id or a credential.
      from openai import OpenAI
      client = OpenAI(base_url="${api}/v1", api_key=os.environ["EXPLABS_API_KEY"])
      r = client.chat.completions.create(
-         model="<the smallest Qwen id from step 1>",
+         model="<the promo Qwen id from step 1>",
          messages=[{"role": "user", "content": "reply with the single word: ok"}],
      )
      print(r.choices[0].message.content)

@@ -4,6 +4,7 @@
 # Shared backend smoke probes, sourced by the stack smoke drivers:
 #   smoke_backend       health + authenticated /api/orgs (+ optional seed/web checks)
 #   smoke_login         Supabase password login returns an access token (login shape)
+#   smoke_credit_budget the authenticated credits/budget read used by the UI
 #   smoke_gateway_edge_surface proves the transparent /v1 proxy without spend
 # Factor the probes here so the health/auth/serving contract is defined once.
 #
@@ -104,6 +105,71 @@ assert session.get("token_type", "").lower() == "bearer", "unexpected token_type
 print("Login: ok (access token issued; value not printed)")
 PY
   rm -f "${login_json}"
+}
+
+# Resolve the organization the authenticated smokes operate on: prefer the
+# platform operator's org view, else the first org served. Usage:
+#   smoke_select_org_id BASE_URL API_KEY LABEL
+# Prints the selected org id; LABEL names the calling probe in failures.
+smoke_select_org_id() {
+  local base="${1%/}" api_key="$2" label="$3" orgs_json
+  orgs_json="$(mktemp)"
+  curl -fsS --max-time 30 "${base}/api/orgs" \
+    -H "Authorization: Bearer ${api_key}" \
+    -H "X-Explabs-Actor-Id: ${SMOKE_ACTOR_ID}" \
+    -o "${orgs_json}"
+  SMOKE_ORG_LABEL="${label}" python3 - "${orgs_json}" <<'PY'
+import json
+import os
+import sys
+from pathlib import Path
+
+orgs = json.loads(Path(sys.argv[1]).read_text())
+label = os.environ["SMOKE_ORG_LABEL"]
+assert isinstance(orgs, list) and orgs, f"no organization available for {label} smoke"
+operator = next((org for org in orgs if org.get("role") == "platform_admin"), None)
+selected = operator or orgs[0]
+assert isinstance(selected.get("id"), str) and selected["id"], selected
+print(selected["id"])
+PY
+  rm -f "${orgs_json}"
+}
+
+# Verify the authenticated credits budget read. Usage:
+#   smoke_credit_budget BASE_URL API_KEY
+# This is the highest-volume read behind the signed-in shell and /credits page.
+# A response that reaches an old relation, misses a credit-ledger column, or
+# otherwise returns a server error must fail the release smoke immediately.
+smoke_credit_budget() {
+  local base="${1%/}" api_key="$2" budget_json org_id
+  org_id="$(smoke_select_org_id "${base}" "${api_key}" credits)"
+  budget_json="$(mktemp)"
+  curl -fsS --max-time 30 "${base}/api/orgs/${org_id}/budget" \
+    -H "Authorization: Bearer ${api_key}" \
+    -H "X-Explabs-Actor-Id: ${SMOKE_ACTOR_ID}" \
+    -o "${budget_json}"
+  python3 - "${budget_json}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+payload = json.loads(Path(sys.argv[1]).read_text())
+assert isinstance(payload, dict), payload
+required = {
+    "spend_usd",
+    "billable_spend_usd",
+    "credit_granted_usd",
+    "credit_balance_usd",
+}
+missing = sorted(required.difference(payload))
+assert not missing, {"missing": missing, "payload": payload}
+for field in sorted(required):
+    value = payload[field]
+    # bool is an int subclass; a true/false counter is a broken contract.
+    assert isinstance(value, (int, float)) and not isinstance(value, bool), payload
+print("Credits budget: authenticated read returned the complete credit contract")
+PY
+  rm -f "${budget_json}"
 }
 
 # Verify the /v1 edge is the transparent gateway proxy. Usage:

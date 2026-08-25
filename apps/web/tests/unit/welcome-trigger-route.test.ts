@@ -5,6 +5,7 @@ const createServerSupabaseClient = vi.hoisted(() => vi.fn());
 const requireAuthorizedOrgIds = vi.hoisted(() => vi.fn());
 const resolveActiveOrg = vi.hoisted(() => vi.fn());
 const readLaunchGrantUsd = vi.hoisted(() => vi.fn());
+const orgIsYcCompany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/server", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth/server")>("@/lib/auth/server");
@@ -16,6 +17,7 @@ vi.mock("@/lib/auth/orgs", async () => {
 });
 vi.mock("@/lib/active-org", () => ({ resolveActiveOrg }));
 vi.mock("@/lib/billing/launch-grant", () => ({ readLaunchGrantUsd }));
+vi.mock("@/lib/billing/tool-accounts-server", () => ({ orgIsYcCompany }));
 
 import { POST } from "@/app/api/account/welcome-trigger/route";
 
@@ -55,6 +57,7 @@ beforeEach(() => {
   requireAuthorizedOrgIds.mockResolvedValue(new Set(["org-1"]));
   resolveActiveOrg.mockResolvedValue({ id: "org-1", slug: "org-1" });
   readLaunchGrantUsd.mockResolvedValue(20);
+  orgIsYcCompany.mockResolvedValue(false);
 });
 
 describe("POST /api/account/welcome-trigger", () => {
@@ -68,7 +71,8 @@ describe("POST /api/account/welcome-trigger", () => {
     expect(await response.json()).toEqual({
       show: true,
       displayCreditUsd: 526,
-      showApiKey: true
+      showApiKey: true,
+      isYcCompany: false
     });
     expect(client.rpc).toHaveBeenCalledWith("claim_welcome_trigger_showing", {
       in_org: "org-1",
@@ -83,8 +87,17 @@ describe("POST /api/account/welcome-trigger", () => {
     expect(await (await POST()).json()).toEqual({
       show: true,
       displayCreditUsd: 20,
-      showApiKey: true
+      showApiKey: true,
+      isYcCompany: false
     });
+  });
+
+  it("carries the YC-company flag on the show payload", async () => {
+    const client = supabaseClient(ARMED);
+    createServerSupabaseClient.mockResolvedValue(client);
+    orgIsYcCompany.mockResolvedValue(true);
+
+    expect((await (await POST()).json()).isYcCompany).toBe(true);
   });
 
   it("is silent when the trigger is disarmed", async () => {

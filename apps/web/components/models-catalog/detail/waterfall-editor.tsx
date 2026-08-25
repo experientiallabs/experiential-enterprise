@@ -128,7 +128,7 @@ export function WaterfallEditor({
         <ol className="m-0 flex list-none flex-col p-0" data-testid="waterfall-chain">
           {effective.length === 0 ? (
             <li className="py-2 text-[13px] text-muted-2">
-              No chain yet — the model&apos;s routes are tried in catalog order.
+              No chain yet, the model&apos;s routes are tried in catalog order.
             </li>
           ) : (
             effective.map((rung, index) => (

@@ -149,7 +149,7 @@ export function UseViaKeyCard({
           <p className="m-0 max-w-[780px] text-[13px] leading-relaxed text-muted">
             Serve this model on your own provider account: pick one of your connected keys, add a
             new one inline, and set which providers you prioritize for it. Keys added here appear in
-            Settings too — same store.
+            Settings too, same store.
           </p>
         </div>
       ) : null}
@@ -312,7 +312,7 @@ function ProviderKeyRow({
         )}
 
       {/* Azure least-clicks: connected and valid, but this model has no (or a
-          missing) deployment — just the deployment name, saved and probed in
+          missing) deployment, just the deployment name, saved and probed in
           one round-trip. */}
       {!loading &&
         isAzure &&
@@ -382,7 +382,7 @@ function RowVerdict({
   }
   if (connection.provider === "azure_openai") {
     if (mapped === null) {
-      return <span>Key connected — name this model&apos;s deployment to serve it.</span>;
+      return <span>Key connected, name this model&apos;s deployment to serve it.</span>;
     }
     if (factCurrent === null) {
       return probing ? (
@@ -391,7 +391,7 @@ function RowVerdict({
         </span>
       ) : (
         <span>
-          Mapped to deployment <span className="font-mono">{mapped}</span> — not checked yet.
+          Mapped to deployment <span className="font-mono">{mapped}</span>, not checked yet.
         </span>
       );
     }
@@ -410,7 +410,7 @@ function RowVerdict({
     );
   }
   if (connection.status === "unchecked") {
-    return <span>Key saved ····{connection.credential_last4} — not verified yet.</span>;
+    return <span>Key saved ····{connection.credential_last4}, not verified yet.</span>;
   }
   return (
     <span data-testid="serves-via-key">

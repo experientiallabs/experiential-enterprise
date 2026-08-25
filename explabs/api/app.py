@@ -29,6 +29,7 @@ from explabs.api.load_shed import InFlightLimitMiddleware, configured_max_concur
 from explabs.api.openai_errors import openai_error_response
 from explabs.api.request_timing import RequestTimingMiddleware
 from explabs.api.routes import ApiError, get_supabase
+from explabs.api.routes.admin_org_lookup import router as admin_org_lookup_router
 from explabs.api.routes.aliases import router as aliases_router
 from explabs.api.routes.audit_log import router as audit_log_router
 from explabs.api.routes.capabilities import router as capabilities_router
@@ -326,6 +327,7 @@ def create_app(  # noqa: PLR0915 - one coherent app factory; the body is a flat 
         app.include_router(telemetry_traces_router)
         app.include_router(yc_router)
         app.include_router(welcome_trigger_router)
+        app.include_router(admin_org_lookup_router)
         app.include_router(gateway_usage_router)
         app.include_router(usage_import_router)
         app.include_router(serving_requests_router)

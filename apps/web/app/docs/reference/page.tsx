@@ -23,7 +23,11 @@ const ENDPOINT_COLUMNS = [
 ] as const;
 
 const INFERENCE_ROWS = [
-  { endpoint: "GET /v1/models", purpose: "List the model slugs this key can call." },
+  {
+    endpoint: "GET /v1/models",
+    purpose:
+      "List the model slugs this key can call; entries add a pricing extension (micro-USD per million tokens)."
+  },
   {
     endpoint: "POST /v1/chat/completions",
     purpose: "OpenAI Chat Completions; stream: true for SSE."
@@ -60,7 +64,7 @@ const USAGE_ROWS = [
   { endpoint: "GET /api/gateway/usage/daily", purpose: "Grouped usage rollup (group_by day, model, or member)." },
   { endpoint: "GET /api/gateway/usage/events", purpose: "The paginated per-request usage stream." },
   { endpoint: "GET /api/gateway/catalog", purpose: "Aliases as your org resolves them, each with its lane." },
-  { endpoint: "GET /api/gateway/keys/{api_key_id}/limits", purpose: "Read a key's effective guardrails — daily spend cap, requests/minute, tokens/minute — with platform defaults included; null means uncapped." },
+  { endpoint: "GET /api/gateway/keys/{api_key_id}/limits", purpose: "Read a key's effective guardrails, daily spend cap, requests/minute, tokens/minute, with platform defaults included; null means uncapped." },
   { endpoint: "GET /api/keys", purpose: "List your org's API keys (never secrets)." }
 ];
 

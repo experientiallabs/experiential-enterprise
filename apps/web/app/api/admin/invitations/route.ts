@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { invitationLink, type OrgInvitation } from "@/lib/admin/invitations";
 import { sendInvitationEmail, type InviteEmailResult } from "@/lib/admin/invite-email";
 import { isPlatformAdmin } from "@/lib/auth/admin";
+import { requestOrigin } from "@/lib/auth/redirects";
 import { carryAuthCookies, createRouteSupabaseClient } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const email: InviteEmailResult = await sendInvitationEmail({
       to: invitation.email,
       orgName: payload.orgName,
-      inviteUrl: invitationLink(request.nextUrl.origin, invitation.token)
+      inviteUrl: invitationLink(requestOrigin(request), invitation.token)
     });
     return carryAuthCookies(response, NextResponse.json({ invitation, email }, { status: 201 }));
   } catch (error) {

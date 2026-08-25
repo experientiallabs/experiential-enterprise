@@ -46,7 +46,7 @@ export function RequestAccessBanner({ offer }: { offer: JoinOffer }) {
       <p className="m-0 text-[13px] leading-relaxed text-ink">
         Your email domain matches <span className="font-medium">{offer.org_name}</span>.
         {offer.request_status === "pending"
-          ? " Access requested — an admin of the organization will review it."
+          ? " Access requested, an admin of the organization will review it."
           : offer.email_verified
             ? " Request access to join it."
             : " Verify your email to request access."}

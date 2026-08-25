@@ -40,7 +40,7 @@ const PROVIDER_ROWS = [
   { provider: "modal", needs: "A base_url and a Modal token pair." },
   {
     provider: "experiential_cloud",
-    needs: `${EXPERIENTIAL_CLOUD_DESCRIPTION} Nothing to connect — call these slugs with your Experiential Labs key.`
+    needs: `${EXPERIENTIAL_CLOUD_DESCRIPTION} Nothing to connect, call these slugs with your Experiential Labs key.`
   }
 ];
 
@@ -164,7 +164,7 @@ export default function ModelsDocsPage() {
             <strong className="font-medium text-ink">Pricing</strong>: real prices
             carry their source (<Code>openrouter</Code>, <Code>provider-docs</Code>,{" "}
             <Code>aws-price-list</Code>); a value we had to guess is{" "}
-            <Code>pricing_source = &apos;estimate&apos;</Code> and is display-only —
+            <Code>pricing_source = &apos;estimate&apos;</Code> and is display-only , 
             an estimated price is never billed or served on the platform lane.
           </li>
         </DocsList>

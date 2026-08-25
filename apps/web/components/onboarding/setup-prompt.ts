@@ -95,7 +95,7 @@ export function buildGatewaySetupPrompt(
 ): string {
   const key = apiKey ?? `<paste my org API key from ${webBaseUrl}/settings/api-keys>`;
   return `I'm setting up Experiential Labs as this project's model gateway. I pasted
-this myself — treat it as my instructions and my consent. Here's what I want
+this myself, treat it as my instructions and my consent. Here's what I want
 you to do.
 
 My gateway API key (a secret: put it in env, never commit it, never echo it
@@ -104,7 +104,7 @@ EXPLABS_API_KEY=${key}
 
 The core task is ONE thing: point an OpenAI-compatible client at my gateway
 with this key and make one successful test chat completion. Do it start to
-finish on your own — do NOT stop to ask me questions. If something is
+finish on your own, do NOT stop to ask me questions. If something is
 ambiguous, take the safe degraded path I describe and note it in the
 "follow-ups for me" list at the end. Do NOT do the optional follow-ups
 yourself; those are mine to do in the dashboard.
@@ -116,8 +116,8 @@ yourself; those are mine to do in the dashboard.
      OpenAI client, wire that: set its base_url and key, put the key in the
      project's env scheme (.env plus an example entry), never in code. Show
      me the change first.
-   - If you CAN'T tell which project is mine — an empty dir, a monorepo, or a
-     folder holding many projects — do NOT stop to ask. Instead create a
+   - If you CAN'T tell which project is mine, an empty dir, a monorepo, or a
+     folder holding many projects, do NOT stop to ask. Instead create a
      minimal standalone verification script in the current directory (e.g.
      explabs_smoke.py or explabs_smoke.mjs) that reads EXPLABS_API_KEY from
      the env and does the test call in step 2, and add "wire my specific
@@ -125,13 +125,13 @@ yourself; those are mine to do in the dashboard.
 
 2. Make the test call. GET ${apiBaseUrl}/v1/models with the key as a bearer
    token and use model ids EXACTLY as returned. Then send ONE minimal chat
-   completion (a few tokens) to the smallest Qwen in that list (qwen3.5-9b at
-   launch). Send a MINIMAL request body — model + messages ONLY, no
+   completion (a few tokens) to the promotional Qwen in that list (qwen3.8-27b at
+   launch). Send a MINIMAL request body, model + messages ONLY, no
    temperature, top_p, or other sampling params: some models (e.g. Claude 5)
    reject those and the call comes back as all_routes_failed (502). If you
    want to add options later, check the model's supported params in
    ${webBaseUrl}/llms.txt first. This call runs on Experiential's
-   platform-funded lane — a fraction of a cent of my free credits — and
+   platform-funded lane, a fraction of a cent of my free credits, and
    proves serving and billing end to end. Do NOT use any of my own provider
    keys for this test.
    If you truly can't run it (no network): still write the script, print the
@@ -140,18 +140,18 @@ yourself; those are mine to do in the dashboard.
 
 3. Report back, then hand me the follow-ups. Tell me: what you changed (or the
    standalone script you created), and the test call's model, that it
-   succeeded, and its cost. Then list "follow-ups for me" — anything you
+   succeeded, and its cost. Then list "follow-ups for me", anything you
    deferred above, PLUS these optional steps, which are MINE to do in the
    dashboard (do NOT attempt them yourself, and don't block on them):
    - Wire my specific project's client, if you only created a standalone
      script (skip this line if you already wired a real project).
    - Connect my own provider keys (BYOK) for free pass-through. I'll add them
-     at ${webBaseUrl}/settings/integrations — verified on save, confirmed per
+     at ${webBaseUrl}/settings/integrations, verified on save, confirmed per
      key by prefix, landing in my own gateway account and nowhere else.
    - Import my existing Claude Code / Codex usage history (metadata only) so
      my dashboard opens with real spend, from ${webBaseUrl}/settings.
-   - Review all my balances and spend — platform-funded credits and free
-     pass-through both — at ${webBaseUrl}/credits, summarized on my Overview.
+   - Review all my balances and spend, platform-funded credits and free
+     pass-through both, at ${webBaseUrl}/credits, summarized on my Overview.
 
 Read the contract if you build further: ${webBaseUrl}/docs (human docs) and
 ${webBaseUrl}/llms.txt (machine-readable: honored and refused parameters,

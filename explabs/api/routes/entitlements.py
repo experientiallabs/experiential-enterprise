@@ -22,7 +22,17 @@ from explabs.api.audit import AuditAction, record_audit_event
 from explabs.api.capabilities import EnterpriseCapability
 from explabs.api.routes import ApiError, get_supabase, load_org_row
 from explabs.api.tenancy import RequestActor, get_request_actor, require_platform_admin
-from explabs.db.repositories import DeleteCapableQuery, RepositoryError, SupabaseClient
+from explabs.db.repositories import (
+    DeleteCapableQuery,
+    JsonObject,
+    RepositoryError,
+    SupabaseClient,
+)
+
+# PostgREST truncates unwindowed selects at 1000 rows; page in windows of the
+# same size, and keep in_() id lists small enough for the request-URL bound.
+_POSTGREST_PAGE_SIZE = 1000
+_ORG_LOOKUP_CHUNK = 200
 
 router = APIRouter(prefix="/api", tags=["entitlements"])
 
@@ -91,6 +101,97 @@ def _parsed_expiry(raw: str | None) -> str | None:
         msg = "expires_at is already in the past"
         raise ApiError(msg, status_code=400)
     return stamp.isoformat()
+
+
+class DeploymentEntitlementView(BaseModel):
+    """One grant row labeled with its organization, for the Enterprise tab."""
+
+    model_config = ConfigDict(frozen=True)
+
+    org_id: str
+    org_slug: str | None
+    org_name: str | None
+    capability: str
+    granted_by: str | None
+    note: str | None
+    created_at: str | None
+    expires_at: str | None
+
+
+class DeploymentEntitlementsResponse(BaseModel):
+    """Every entitlement grant on the deployment, newest org first."""
+
+    entitlements: list[DeploymentEntitlementView]
+
+
+@router.get("/admin/entitlements", response_model=DeploymentEntitlementsResponse)
+def list_deployment_entitlements(client: Client, actor: Actor) -> DeploymentEntitlementsResponse:
+    """List every org entitlement grant across the deployment (operator surface).
+
+    Expired rows are included (the view marks them by expiry) so an operator
+    can see a lapsed pilot and re-grant it, rather than the row silently
+    vanishing from the panel while still occupying the (org, capability) slot.
+    """
+    require_platform_admin(actor)
+    # Page past PostgREST's row cap: an unwindowed select silently truncates at
+    # 1000 rows, which would make the "deployment-wide" inventory a lie on a
+    # large deployment. Keyset pagination on org_id (not absolute offsets, which
+    # duplicate or skip rows when a concurrent grant/revoke shifts the table):
+    # each full window emits only its complete orgs and re-anchors past the last
+    # one, which always advances because an org holds at most five capability
+    # rows — far fewer than one window.
+    rows: list[JsonObject] = []
+    cursor: str | None = None
+    while True:
+        query = (
+            client.table("org_entitlements")
+            .select("*")
+            .order("org_id")
+            .order("capability")
+            .range(0, _POSTGREST_PAGE_SIZE - 1)
+        )
+        if cursor is not None:
+            query = query.gt("org_id", cursor)
+        page = query.execute().data
+        if len(page) < _POSTGREST_PAGE_SIZE:
+            rows.extend(page)
+            break
+        split_org = str(page[-1]["org_id"])  # a full window may split this org
+        kept = [row for row in page if str(row["org_id"]) != split_org]
+        rows.extend(kept)
+        cursor = str(kept[-1]["org_id"])
+    org_ids = sorted({str(row["org_id"]) for row in rows})
+    org_labels: dict[str, tuple[str | None, str | None]] = {}
+    # Chunk the label lookup: one in_() over every org id would blow the URL
+    # length bound and the same row cap once grants span >1000 organizations.
+    for chunk_start in range(0, len(org_ids), _ORG_LOOKUP_CHUNK):
+        chunk = org_ids[chunk_start : chunk_start + _ORG_LOOKUP_CHUNK]
+        org_rows = (
+            client.table("organizations").select("id, slug, name").in_("id", chunk).execute()
+        ).data
+        for org in org_rows:
+            org_labels[str(org["id"])] = (
+                None if org.get("slug") is None else str(org["slug"]),
+                None if org.get("name") is None else str(org["name"]),
+            )
+    ordered = sorted(
+        rows, key=lambda row: (str(row.get("created_at", "")), str(row["capability"])), reverse=True
+    )
+    return DeploymentEntitlementsResponse(
+        entitlements=[
+            DeploymentEntitlementView(
+                org_id=str(row["org_id"]),
+                org_slug=org_labels.get(str(row["org_id"]), (None, None))[0],
+                org_name=org_labels.get(str(row["org_id"]), (None, None))[1],
+                capability=str(row["capability"]),
+                granted_by=(None if row.get("granted_by") is None else str(row["granted_by"])),
+                note=(None if row.get("note") is None else str(row["note"])),
+                created_at=(None if row.get("created_at") is None else str(row["created_at"])),
+                expires_at=(None if row.get("expires_at") is None else str(row["expires_at"])),
+            )
+            for row in ordered
+        ]
+    )
 
 
 @router.get("/admin/orgs/{org_id}/entitlements", response_model=OrgEntitlementsResponse)

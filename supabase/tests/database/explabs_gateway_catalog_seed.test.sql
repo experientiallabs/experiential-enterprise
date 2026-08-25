@@ -11,7 +11,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(27);
+select plan(29);
 
 -- The house org that owns the platform-funded lane.
 
@@ -226,35 +226,85 @@ select is(
     where promos.active
   ),
   array['qwen3.8-27b', 'deepseek-v4-flash', 'gpt-5.6-luna',
-        'GPT on Experiential Cloud — 50% off'],
+        'GPT on Experiential Cloud - 50% off'],
   'the launch promotions are seeded active in display order'
 );
 
 select ok(
   exists (
     select 1 from public.model_promotions promos
-    where promos.label = 'GPT on Experiential Cloud — 50% off'
+    where promos.label = 'GPT on Experiential Cloud - 50% off'
       and promos.percent_off = 50
       and promos.discount_cap_micro_usd = 50000000000
       and promos.providers = array['experiential_cloud']
+      and promos.audience_labels = array['yc']
+      and promos.family_keys = '{}'
       and promos.per_org_cap_micro_usd = 0
       and promos.cap_scope = 'lifetime'
   ),
-  'the GPT-on-EC promotion is 50% off via experiential_cloud, $50k per-org ceiling, no free tier'
+  'the GPT-on-EC promotion is 50% off via experiential_cloud, YC accounts only, $50k per-org ceiling, no free tier'
 );
 
 select is(
   (
-    select count(*)::int
+    select coalesce(array_agg(members.slug order by members.slug), '{}')
     from public.model_promotion_models members
     join public.model_promotions promos on promos.id = members.promotion_id
-    left join public.models models
-      on models.id = members.model_id and models.icon = 'openai'
-    where promos.label = 'GPT on Experiential Cloud — 50% off'
-      and models.id is null
+    where promos.label = 'GPT on Experiential Cloud - 50% off'
+  ),
+  array['gpt-5.6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra'],
+  'the GPT-on-EC promotion covers exactly the 5.6 luna/sol/terra trio'
+);
+
+-- Experiential Cloud rungs lead every default chain that carries them (owner
+-- decision 2026-08-24). EC-first means no non-EC rung sits below any EC rung.
+select is(
+  (
+    select count(*)::int
+    from public.model_waterfalls w
+    join public.model_providers mp on mp.id = w.model_provider_id
+    where w.org_id is null
+      and mp.provider <> 'experiential_cloud'
+      and w.position < (
+        select max(w2.position)
+        from public.model_waterfalls w2
+        join public.model_providers mp2 on mp2.id = w2.model_provider_id
+        where w2.model_id = w.model_id
+          and w2.org_id is null
+          and mp2.provider = 'experiential_cloud'
+      )
   ),
   0,
-  'the GPT-on-EC promotion covers exactly icon=openai (GPT-family) models'
+  'experiential_cloud rungs lead every default chain that carries them'
+);
+
+-- One wire id, one catalog model. `model_providers_identity_key` is unique on
+-- (model_id, provider, provider_model_id, owning_org_id, base_url), so a second
+-- model row for the SAME provider wire id inserts without any conflict firing —
+-- the constraint cannot catch it, and the catalog then lists the same model
+-- twice (the 2026-08-24 daily sync seeded `l3.3-euryale-70b` beside
+-- `llama-3.3-euryale-70b` on `sao10k/l3.3-euryale-70b` that way). A model may
+-- carry several wire ids on one provider (a base plus its dated snapshot), but
+-- one wire id never carries several models.
+
+select is(
+  (
+    select coalesce(
+      array_agg(dup.provider || ':' || dup.provider_model_id order by dup.provider_model_id),
+      '{}'
+    )
+    from (
+      select deployments.provider, deployments.provider_model_id
+      from public.model_providers deployments
+      join public.models models
+        on models.id = deployments.model_id and models.owning_org_id is null
+      where deployments.owning_org_id is null
+      group by deployments.provider, deployments.provider_model_id, deployments.base_url
+      having count(distinct deployments.model_id) > 1
+    ) dup
+  ),
+  '{}'::text[],
+  'no provider wire id is bound to two public catalog models'
 );
 
 -- The pricing coupling holds catalog-wide, not just on preferred rows: no

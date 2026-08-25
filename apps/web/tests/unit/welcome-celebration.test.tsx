@@ -43,4 +43,20 @@ describe("WelcomeCelebration (minimal welcome modal)", () => {
     expect(screen.queryByTestId("welcome-credits-line")).toBeNull();
     expect(screen.queryByText("API key")).toBeNull();
   });
+
+  it("co-brands for the YC variant with the mark and the deal headline", () => {
+    render(<WelcomeCelebration grantedUsd={526} apiKey={null} showApiKey variant="yc" {...BASE} />);
+
+    expect(screen.getByTestId("welcome-yc-mark")).toBeTruthy();
+    expect(screen.getByText("Your YC deal is applied 🎉")).toBeTruthy();
+    expect(screen.queryByText("Welcome, you're in")).toBeNull();
+  });
+
+  it("shows neither the YC mark nor the headline by default", () => {
+    render(<WelcomeCelebration grantedUsd={526} apiKey={null} showApiKey {...BASE} />);
+
+    expect(screen.queryByTestId("welcome-yc-mark")).toBeNull();
+    expect(screen.queryByText("Your YC deal is applied 🎉")).toBeNull();
+    expect(screen.getByText("Welcome, you're in")).toBeTruthy();
+  });
 });

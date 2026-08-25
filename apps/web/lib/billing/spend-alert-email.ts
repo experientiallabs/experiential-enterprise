@@ -121,7 +121,7 @@ function spendAlertEmailHtml({
     `<p style="font-size: 14px; line-height: 1.6;">${crossing}</p>`,
     `<p style="font-size: 14px; line-height: 1.6;">Month: <strong>${period}</strong> (UTC). At the current pace, a straight-line projection puts this figure near <strong>${projection}</strong> by month end.</p>`,
     `<p style="margin: 24px 0;"><a href="${creditsUrl}" style="background: #171717; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 9999px; font-size: 14px; font-weight: 600;">View spend &amp; alerts</a></p>`,
-    `<p style="font-size: 12px; color: #737373; line-height: 1.6;">This is a notification you set up on the credits page — hard budget caps keep enforcing on their own. You'll get at most one email per rule per calendar month.</p>`,
+    `<p style="font-size: 12px; color: #737373; line-height: 1.6;">This is a notification you set up on the credits page, hard budget caps keep enforcing on their own. You'll get at most one email per rule per calendar month.</p>`,
     `</div>`
   ].join("\n");
 }

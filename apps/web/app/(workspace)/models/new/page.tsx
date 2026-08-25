@@ -20,7 +20,9 @@ export default async function NewModelPage() {
   const user = await getAuthenticatedUser();
   const org = user === null ? null : await resolveActiveOrg();
   return (
-    <div className="flex min-h-0 flex-col gap-5">
+    // page-bottom-pad: this page scrolls, and the form ended flush against the
+    // viewport's bottom edge (same fix as the model detail page).
+    <div className="page-bottom-pad flex min-h-0 flex-col gap-5">
       <div>
         <Link
           className="mb-3 inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"

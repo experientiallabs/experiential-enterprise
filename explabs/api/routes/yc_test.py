@@ -35,7 +35,9 @@ def _signup_promo_row(org_id: str) -> dict[str, object]:
 
 
 def _org_labels(supabase: FakeSupabaseClient, org_id: str) -> list[str]:
-    return [str(row["key"]) for row in supabase.tables.get("org_labels", []) if row["org_id"] == org_id]
+    return [
+        str(row["key"]) for row in supabase.tables.get("org_labels", []) if row["org_id"] == org_id
+    ]
 
 
 def test_yc_claim_applies_label_and_grant_folding_the_promo(

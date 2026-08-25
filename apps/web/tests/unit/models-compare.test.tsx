@@ -298,4 +298,48 @@ describe("compare board", () => {
       expect(latency?.querySelector('[data-best="true"]')?.textContent).toBe("3.0");
     });
   });
+
+  it("shows a promoted model's list price struck through and highlights best by the EFFECTIVE price", () => {
+    const promo = {
+      label: "Bravo launch",
+      slugs: ["bravo"],
+      display_order: 0,
+      free: true,
+      percent_off: 0,
+      providers: [],
+      family_keys: []
+    };
+    render(
+      <CompareBoard entries={ENTRIES} promotions={[promo]} selectedSlugs={["alpha", "bravo"]} />
+    );
+    const inputRow = screen
+      .getAllByRole("row")
+      .find((row) => row.querySelector("th")?.textContent === "Input $/M");
+    expect(inputRow).toBeTruthy();
+    const promoPrice = inputRow?.querySelector('[data-testid="promo-price"]');
+    // Bravo's $5 list price is crossed out beside the free price.
+    expect(promoPrice?.querySelector("s")?.textContent).toBe("$5");
+    expect(promoPrice?.textContent).toContain("$0");
+    // Free ($0) beats alpha's $1.00, so BRAVO's cell wins the row even though
+    // its list price is five times alpha's.
+    const bestCell = inputRow?.querySelector('[data-best="true"]');
+    expect(bestCell?.contains(promoPrice ?? null)).toBe(true);
+  });
+
+  it("adds a model from the matrix header picker, mirrored in place via replaceState", async () => {
+    render(<CompareBoard entries={ENTRIES} selectedSlugs={["alpha", "bravo"]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add model" }));
+    fireEvent.click(await screen.findByRole("option", { name: /Charlie/ }));
+    expect(replaceState).toHaveBeenLastCalledWith(
+      null,
+      "",
+      "/models/compare?models=alpha,bravo,charlie"
+    );
+    expect(replace).not.toHaveBeenCalled();
+    // At the four-model cap the add control disappears.
+    fireEvent.click(screen.getByRole("button", { name: "Add model" }));
+    fireEvent.click(await screen.findByRole("option", { name: /Delta/ }));
+    expect(screen.queryByRole("button", { name: "Add model" })).toBeNull();
+  });
 });
+

@@ -69,11 +69,11 @@ export function buildTraceTelemetryPrompt(webBaseUrl: string, apiBaseUrl: string
   const api = apiBaseUrl.replace(/\/+$/, "");
   const pullTransports = TRACE_PULL_TRANSPORTS.join(", ");
   const uploadFormats = TRACE_UPLOAD_FORMATS.join(", ");
-  return `I pasted this into you myself — please create an Experiential Labs account for
+  return `I pasted this into you myself, please create an Experiential Labs account for
 me and then pull my existing LLM traces onto the platform as telemetry. This is
 my consent to create the account under my identity (using the email I give you
 when you ask), to read my own trace files, and to use the observability
-credential I give you. No browser step is needed to start — my account is
+credential I give you. No browser step is needed to start, my account is
 created instantly from my email; I only verify that email later to unlock my
 credits, and I don't need to for my traces to land.
 
@@ -82,7 +82,7 @@ This uploads my existing traces so I can see them as telemetry on the platform.
 Do it in this order. Print what you're doing at each step. If you lack a
 capability (no network, no file access) or get stuck, stop and tell me exactly
 what to do manually. Never invent an email, an API key, a credential, or a file
-path — if you don't have one, ask me.
+path, if you don't have one, ask me.
 
 ${buildInstantSignupSteps(web, api)}
 
@@ -93,7 +93,7 @@ step 2) as the bearer token on every call below. org_id is from step 2.
    for my answer. Map my answer to exactly one path:
    - A supported observability provider or database Platform can pull directly
      (transport_kind one of: ${pullTransports}) -> go to step 6 (live pull).
-   - An exported trace FILE on disk — a raw OpenTelemetry/OTLP export, an
+   - An exported trace FILE on disk, a raw OpenTelemetry/OTLP export, an
      Arize/Phoenix export, or any of these upload formats
      (source_kind one of: ${uploadFormats}) -> go to step 7 (file upload).
    If I'm on Arize or Phoenix, there's no live pull yet: ask me to export my
@@ -102,7 +102,7 @@ step 2) as the bearer token on every call below. org_id is from step 2.
    either list, tell me and offer the file-upload path. Only follow the ONE
    path that matches my answer.
 
-6. Live pull path — connect the provider and pull. Ask me for the credential
+6. Live pull path, connect the provider and pull. Ask me for the credential
    for the provider I named (for Braintrust an API key; for LangSmith/Langfuse
    their API key; for a Postgres database a DSN), plus the small bits of config
    that provider needs (e.g. Braintrust: the project name; LangSmith/Langfuse:
@@ -115,7 +115,7 @@ step 2) as the bearer token on every call below. org_id is from step 2.
           "credential": "<the secret you asked me for>",
           "config": {"project": "<my project>"}}
    The credential is used once to pull and is not echoed back. On 201 the
-   response is {"ingest_id", "trace_count", "byte_size", "sha256", ...} —
+   response is {"ingest_id", "trace_count", "byte_size", "sha256", ...} , 
    capture trace_count and show it to me. A 400 means bad credentials or config
    (tell me exactly what it said); 429 means the provider rate-limited us (wait
    and retry). Then go to step 8.
@@ -127,7 +127,7 @@ step 2) as the bearer token on every call below. org_id is from step 2.
             "source_label":"braintrust-prod","credential":"<my braintrust key>",
             "config":{"project":"<my braintrust project>"}}'
 
-7. File upload path — find my trace export and upload it. I'm authorizing you to
+7. File upload path, find my trace export and upload it. I'm authorizing you to
    look for my own trace exports: search the current project, ./traces, ./logs,
    ./data, and my common cache/config paths for JSON or JSONL files that hold
    LLM/agent spans or runs (names like traces.jsonl, *.otel.jsonl, spans.json,
@@ -138,7 +138,7 @@ step 2) as the bearer token on every call below. org_id is from step 2.
    Arize/Phoenix export -> phoenix; a vendor export -> its own name; a plain
    chat transcript -> chat-json). The file must be UTF-8 JSON or JSONL and at
    most 50 MB. Then do this three-step upload (do not POST the file through the
-   API — that legacy multipart contract is gone):
+   API, that legacy multipart contract is gone):
    1. POST ${api}/api/orgs/<org_id>/telemetry/traces/upload
       Header: Authorization: Bearer $EXPLABS_API_KEY, Content-Type: application/json
       Body: {"source_kind":"<the format you chose>",
@@ -179,7 +179,7 @@ and the machine-readable contract is ${web}/llms.txt.
 One last thing to tell me, then you're done: check my email inbox for a message
 from Experiential Labs and click the verification link (or enter the code at
 ${web}/signin) to confirm my email. That's the ONLY thing left for me to do, and
-it just unlocks my credits for paid model calls — my traces are already live and
+it just unlocks my credits for paid model calls, my traces are already live and
 don't need it. Until I verify, credit-drawing model calls are refused with
 "insufficient_quota"; using my own provider keys (BYOK) is unaffected.`;
 }

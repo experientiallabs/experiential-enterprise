@@ -23,6 +23,13 @@ from explabs.db import query_timing
 # uvicorn binds. Kept in the same seconds range as the readiness ping.
 _POOL_CONNECT_TIMEOUT_SECONDS = 10
 
+# The hosted worker receives Supavisor's transaction-pooler URL. Keep no idle
+# client sessions and bound each pod well below the autoscaled fleet's client
+# allowance; the old 2/10 session pool multiplied into the production
+# pool_size=30 ceiling during a rolling surge.
+GATEWAY_POOL_MIN_SIZE = 0
+GATEWAY_POOL_MAX_SIZE = 4
+
 
 def _reset_pooled_connection(connection: Connection[TupleRow]) -> None:
     """Normalize a returned connection back to the transactional default.
@@ -88,7 +95,13 @@ class GatewayDatabase:
     ``COMMIT`` exchange.
     """
 
-    def __init__(self, dsn: str, *, min_size: int = 2, max_size: int = 10) -> None:
+    def __init__(
+        self,
+        dsn: str,
+        *,
+        min_size: int = GATEWAY_POOL_MIN_SIZE,
+        max_size: int = GATEWAY_POOL_MAX_SIZE,
+    ) -> None:
         """Configure one worker-local pool without connecting yet.
 
         Args:
@@ -101,7 +114,13 @@ class GatewayDatabase:
             min_size=min_size,
             max_size=max_size,
             open=False,
-            kwargs={"connect_timeout": _POOL_CONNECT_TIMEOUT_SECONDS},
+            kwargs={
+                "connect_timeout": _POOL_CONNECT_TIMEOUT_SECONDS,
+                # Supavisor transaction mode may assign a different server
+                # session to each transaction, so server-prepared statements
+                # cannot be reused safely across checkouts.
+                "prepare_threshold": None,
+            },
             reset=_reset_pooled_connection,
         )
         self._open_lock = threading.Lock()

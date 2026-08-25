@@ -66,7 +66,9 @@ describe("GET /api/models (signed-in org overlay)", () => {
     const payload = (await response.json()) as { models: { model: { slug: string } }[]; total: number };
     expect(payload.total).toBe(1);
     expect(payload.models.map((entry) => entry.model.slug)).toEqual(["acme-custom"]);
-    expect(fetchOrgOwnedModels).toHaveBeenCalledWith("user-1");
+    // The acting org rides along so the backend narrows promotion
+    // audiences to it (not any org the user belongs to).
+    expect(fetchOrgOwnedModels).toHaveBeenCalledWith("user-1", "org-1");
   });
 });
 
@@ -127,6 +129,82 @@ describe("CatalogTable client overlay", () => {
     await waitFor(() => expect(screen.getByText("Kimi Custom")).toBeInTheDocument());
     // The public row for the shadowed slug is gone (one row per slug).
     expect(screen.queryByText("Kimi K2.6")).not.toBeInTheDocument();
+  });
+
+  it("swaps in the viewer's audience-resolved promotions from the overlay", async () => {
+    // Server render painted the ANONYMOUS promo set (label-scoped promos
+    // withheld); the hydrate response carries the viewer's set, which must
+    // replace it (here: a YC-only 50% promo appearing for a YC org viewer).
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        models: [],
+        promotions: [
+          {
+            label: "yc half off",
+            slugs: ["kimi-k2.6"],
+            display_order: 0,
+            free: false,
+            percent_off: 50,
+            providers: [],
+            family_keys: []
+          }
+        ],
+        total: 0,
+        limit: 1000,
+        offset: 0
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <CatalogTable
+        entries={[
+          makeEntry({ id: "m-pub", slug: "kimi-k2.6", display_name: "Kimi K2.6", preferred_rank: 1 })
+        ]}
+        hydrateOrgModels
+        promotions={[]}
+      />
+    );
+
+    // No promotional band on first paint (anonymous set was empty)...
+    expect(screen.queryByText(/50% off/i)).not.toBeInTheDocument();
+    // ...and the viewer's promotions hydrate in.
+    await waitFor(() => expect(screen.getAllByText(/50% off/i).length).toBeGreaterThan(0));
+    // The band itself resolves against the hydrated set too: a discounted price
+    // with no Promotional section is the display-honesty gap #791 closed.
+    expect(screen.getByTestId("promotional-section").textContent).toContain("Promotional");
+  });
+
+  it("drops the Promotional band when the viewer's set withholds an anonymous promo", async () => {
+    // The reverse swap: the server painted a promo the signed-in viewer is not
+    // eligible for, so hydration must retire the band, not keep the stale one.
+    const fetchMock = vi.fn(async () =>
+      Response.json({ models: [], promotions: [], total: 0, limit: 1000, offset: 0 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <CatalogTable
+        entries={[
+          makeEntry({ id: "m-pub", slug: "kimi-k2.6", display_name: "Kimi K2.6", preferred_rank: 1 })
+        ]}
+        hydrateOrgModels
+        promotions={[
+          {
+            label: "launch week",
+            slugs: ["kimi-k2.6"],
+            display_order: 0,
+            free: true,
+            percent_off: 0,
+            providers: [],
+            family_keys: []
+          }
+        ]}
+      />
+    );
+
+    expect(screen.getByTestId("promotional-section")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("promotional-section")).not.toBeInTheDocument());
   });
 
   it("never fetches an overlay when hydrateOrgModels is off (compare board)", () => {

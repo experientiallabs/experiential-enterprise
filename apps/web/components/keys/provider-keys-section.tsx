@@ -323,7 +323,7 @@ function SnapshotDetail({ connection }: { connection: ProviderConnectionSummary 
   if (snapshot === null) {
     return (
       <p className="m-0 text-[12px] text-muted">
-        No account snapshots from {modelProviderLabel(connection.provider)} yet —{" "}
+        No account snapshots from {modelProviderLabel(connection.provider)} yet , {" "}
         {spendSummary(connection)}.
       </p>
     );
@@ -436,7 +436,7 @@ function BalanceGauge({
           left of the ${connection.declared_balance_usd?.toFixed(2)} you declared
           {connection.metered_spend_usd > 0 && (
             <>
-              {" — "}
+              {", "}
               <span className="font-mono">${connection.metered_spend_usd.toFixed(2)}</span> used
               through this key
               {connection.declared_balance_set_at ? (
@@ -449,7 +449,7 @@ function BalanceGauge({
               )}
             </>
           )}
-          {balanceLow ? " — top up with your provider or update the figure." : "."}
+          {balanceLow ? ", top up with your provider or update the figure." : "."}
         </p>
       ) : (
         <p className="m-0 text-[12px] text-muted">

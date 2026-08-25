@@ -4,6 +4,7 @@ import { recordAuditEvent } from "@/lib/audit";
 import { createServiceRoleSupabaseClient, isPlatformAdmin } from "@/lib/auth/admin";
 import { isOrgAdmin } from "@/lib/auth/admin-orgs";
 import { requireOrgId } from "@/lib/auth/orgs";
+import { requestOrigin } from "@/lib/auth/redirects";
 import { createServerSupabaseClient, requireAuthenticatedUser } from "@/lib/auth/server";
 import { requireOrg } from "@/lib/data-cache";
 import { jsonError } from "@/lib/http";
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest, context: Context): Promise<Resp
       email: payload.email,
       role: payload.role,
       invitedBy: user.id,
-      origin: request.nextUrl.origin
+      origin: requestOrigin(request)
     });
     if (result.action === "error") {
       return NextResponse.json({ error: result.message }, { status: result.status });

@@ -37,10 +37,11 @@ api_url="${EXPLABS_API_URL:-http://127.0.0.1:${api_port}}"
 # shellcheck disable=SC2034
 web_url="${EXPLABS_WEB_URL:-http://127.0.0.1:${web_port}}"
 
-# Host-side probes: health and authenticated organization access.
+# Host-side probes: health, authenticated organization, and credits access.
 # shellcheck source=scripts/lib/smoke.sh
 . "${repo_root}/scripts/lib/smoke.sh"
 smoke_backend "${api_url}" "${EXPLABS_API_KEY}" --require-seed
+smoke_credit_budget "${api_url}" "${EXPLABS_API_KEY}"
 
 # UI (Playwright) tests disabled — the API smoke is sufficient for this gate.
 # To re-enable, add Node/pnpm/Playwright to the runner and then run

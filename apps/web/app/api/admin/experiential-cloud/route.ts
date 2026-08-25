@@ -7,6 +7,7 @@ import type {
   ExperientialCloudUpdateInput
 } from "@/lib/experiential-cloud/types";
 import { jsonError } from "@/lib/http";
+import { revalidateModelsCatalog } from "@/lib/models-catalog/server";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const deployment = await getDataSource().createAdminExperientialCloud(parsed.value);
+    // EC lanes are model_providers rows on the shared cached public catalog;
+    // bust it so the new lane shows without waiting out the window.
+    revalidateModelsCatalog();
     return NextResponse.json(deployment, { status: 201 });
   } catch (error) {
     return jsonError(error);

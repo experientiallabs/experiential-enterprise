@@ -13,7 +13,7 @@ import { clsx } from "clsx";
 
 import { buttonClassName } from "@/components/ui/Button";
 
-import { ModalityIcons, ParamChips, ProviderBadge } from "./badges";
+import { ModalityIcons, ParamChips, PromoPrice, ProviderBadge } from "./badges";
 import { ModelIcon } from "./model-icon";
 import { CatalogTable } from "./catalog-table";
 import { COMPARE_LIMIT } from "./filtering";
@@ -39,12 +39,20 @@ import {
   type ModelBenchmarkExtras
 } from "@/lib/models-catalog/benchmarks";
 import { pinExperientialCloudFirst } from "@/lib/models-catalog/serving";
+import {
+  promoChipsBySlug,
+  promoEffectivePrice,
+  type PromoChip
+} from "@/lib/models-catalog/promotions";
+import { ModelPicker } from "@/components/playground/ModelPicker";
 import { modelPath, playgroundComparePath } from "@/lib/routes";
-import type { CatalogEntry, ModelDetail } from "@/lib/models-catalog/types";
+import type { CatalogEntry, ModelDetail, ModelPromotion } from "@/lib/models-catalog/types";
 
 type CompareBoardProps = {
   /** The whole visible catalog: the comparison data and the picker's rows. */
   entries: CatalogEntry[];
+  /** Active promotions; price rows compare and paint the EFFECTIVE price. */
+  promotions?: ModelPromotion[];
   /** Slugs from the URL, in order; unknown slugs are ignored. */
   selectedSlugs: string[];
   /**
@@ -65,20 +73,45 @@ type CompareRow = {
   best?: "min" | "max";
 };
 
-const ROWS: CompareRow[] = [
+/**
+ * The catalog-fact rows. Price rows are promo-aware: a promoted model shows
+ * its list price struck through beside the effective price, and best-value
+ * highlighting compares the EFFECTIVE prices, so a FREE model wins the row.
+ */
+function buildRows(chips: Map<string, PromoChip>): CompareRow[] {
+  // Lane-aware effective pricing: a lane-scoped promo reprices only its
+  // covered lanes' best price; an unscoped promo reprices the list price.
+  const price = (entry: CatalogEntry, field: "input" | "output") =>
+    promoEffectivePrice(
+      chips.get(entry.model.slug),
+      entry.providers.map((row) => ({
+        provider: row.provider,
+        micro:
+          field === "input" ? row.input_micro_usd_per_million : row.output_micro_usd_per_million
+      }))
+    );
+  const priceCell = (entry: CatalogEntry, field: "input" | "output") => {
+    const pair = price(entry, field);
+    return (
+      <Mono>
+        <PromoPrice effective={pair.effective} list={pair.list} />
+      </Mono>
+    );
+  };
+  return [
   {
     id: "input",
     label: "Input $/M",
-    metric: cheapestInputMicro,
+    metric: (entry) => price(entry, "input").effective,
     best: "min",
-    value: (entry) => <Mono>{formatPerMillionUsd(cheapestInputMicro(entry))}</Mono>
+    value: (entry) => priceCell(entry, "input")
   },
   {
     id: "output",
     label: "Output $/M",
-    metric: cheapestOutputMicro,
+    metric: (entry) => price(entry, "output").effective,
     best: "min",
-    value: (entry) => <Mono>{formatPerMillionUsd(cheapestOutputMicro(entry))}</Mono>
+    value: (entry) => priceCell(entry, "output")
   },
   {
     id: "context",
@@ -140,13 +173,20 @@ const ROWS: CompareRow[] = [
     label: "Category",
     value: (entry) => <span className="text-[12.5px]">{entry.model.category ?? "—"}</span>
   }
-];
+  ];
+}
 
-export function CompareBoard({ entries, selectedSlugs, initialExtras = {} }: CompareBoardProps) {
+export function CompareBoard({
+  entries,
+  promotions = [],
+  selectedSlugs,
+  initialExtras = {}
+}: CompareBoardProps) {
   const bySlug = useMemo(
     () => new Map(entries.map((entry) => [entry.model.slug, entry])),
     [entries]
   );
+  const promoChips = useMemo(() => promoChipsBySlug(promotions), [promotions]);
 
   // Benchmarks + links ride the DETAIL payload only (the catalog list stays
   // lean), so the server prefetches them for the deep-linked selection and a
@@ -237,7 +277,18 @@ export function CompareBoard({ entries, selectedSlugs, initialExtras = {} }: Com
     <div className="flex min-h-0 grow flex-col gap-4">
       {selected.length >= 2 ? (
         <>
-          <div className="flex shrink-0 items-center justify-end">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {/* Add straight from the matrix, without scrolling to the picker
+                table below. Same picker as the playground's Add model. */}
+            {currentSlugs.length < COMPARE_LIMIT ? (
+              <ModelPicker
+                models={entries.filter((entry) => !currentSlugs.includes(entry.model.slug))}
+                onSelect={(slug) => apply([...currentSlugs, slug])}
+                selectedSlug={null}
+                triggerClassName="min-w-0"
+                triggerLabel="Add model"
+              />
+            ) : null}
             {/* Same door as every playground deep link (gamepad mark), in the
                 quiet white/gray button so the matrix stays the page's focus. */}
             <Link
@@ -253,6 +304,7 @@ export function CompareBoard({ entries, selectedSlugs, initialExtras = {} }: Com
             entries={selected}
             extrasBySlug={extrasBySlug}
             onRemove={(slug) => apply(currentSlugs.filter((current) => current !== slug))}
+            promoChips={promoChips}
           />
         </>
       ) : (
@@ -285,13 +337,16 @@ function sameSlugs(a: string[], b: string[]): boolean {
 function CompareMatrix({
   entries,
   extrasBySlug,
-  onRemove
+  onRemove,
+  promoChips
 }: {
   entries: CatalogEntry[];
   extrasBySlug: Record<string, ModelBenchmarkExtras>;
   onRemove: (slug: string) => void;
+  promoChips: Map<string, PromoChip>;
 }) {
   const slugs = entries.map((entry) => entry.model.slug);
+  const rows = useMemo(() => buildRows(promoChips), [promoChips]);
   const benchmarkRows = mergeBenchmarkRows(slugs, extrasBySlug);
   const bestBy = (row: CompareRow): Set<string> => {
     if (!row.metric || !row.best || entries.length < 2) {
@@ -359,7 +414,7 @@ function CompareMatrix({
           </tr>
         </thead>
         <tbody>
-          {ROWS.map((row) => {
+          {rows.map((row) => {
             const best = bestBy(row);
             return (
               <tr className="border-b border-line last:border-b-0" key={row.id}>

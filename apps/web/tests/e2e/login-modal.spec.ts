@@ -50,7 +50,7 @@ test.describe("login modal", () => {
     const success = page.getByTestId("login-success-step");
     await expect(success).toBeVisible();
     await expect(success.locator("code")).toContainText(/^xpl_[0-9a-f]{40}$/);
-    await expect(success.getByText("Shown once, copy it now.")).toBeVisible();
+    await expect(success.getByText("This key won't be shown again — copy it now.")).toBeVisible();
     // The $20 welcome grant is the hero of the reveal, shown with the key.
     const credits = success.getByTestId("welcome-credits-line");
     await expect(credits).toContainText("$20");

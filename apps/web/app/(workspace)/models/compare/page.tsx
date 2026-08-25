@@ -64,7 +64,12 @@ export default async function CompareModelsPage({
   return (
     <div className="flex h-full min-h-0 flex-col gap-5">
       <CompareHeader />
-      <CompareBoard entries={catalog.models} initialExtras={extras} selectedSlugs={selectedSlugs} />
+      <CompareBoard
+        entries={catalog.models}
+        initialExtras={extras}
+        promotions={catalog.promotions}
+        selectedSlugs={selectedSlugs}
+      />
     </div>
   );
 }

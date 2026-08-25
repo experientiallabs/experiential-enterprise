@@ -268,8 +268,8 @@ export function CustomModelForm({ orgId }: { orgId: string | null }) {
       <section className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-[18px]">
         <p className="mono-label m-0">Pricing (optional)</p>
         <p className="m-0 max-w-[640px] text-[12.5px] leading-relaxed text-muted">
-          Used for spend accounting on your usage pages. Leave blank for unpriced — unpriced usage
-          shows — , never $0.
+          Used for spend accounting on your usage pages. Leave blank for unpriced, unpriced usage
+          shows, , never $0.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Input $ / M tokens">

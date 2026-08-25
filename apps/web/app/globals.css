@@ -75,6 +75,17 @@
   animation: wiggle 320ms ease-in-out;
 }
 
+/* A smooth reveal for an affordance that appears in response to a user action
+   (the sign-in form's no_account / wrong_password branches): a short fade with
+   a small upward settle, matching the app's quiet transition idiom. */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-reveal {
+  animation: reveal 200ms ease-out;
+}
+
 /* Scrollable but chromeless: single-line rows (tile tag pills) that must keep a
    uniform height, so the scrollbar is hidden while wheel/trackpad panning stays. */
 .no-scrollbar {
@@ -128,6 +139,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-skeleton {
+    animation: none;
+  }
+  .animate-reveal {
     animation: none;
   }
 }

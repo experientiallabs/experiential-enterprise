@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createServiceRoleSupabaseClient = vi.hoisted(() => vi.fn());
 const isPlatformAdmin = vi.hoisted(() => vi.fn());
@@ -43,6 +44,21 @@ function request(method: string, payload?: unknown) {
   return value;
 }
 
+// Production binds 0.0.0.0:3000, so nextUrl.origin is the bind address. The
+// shared add-or-invite flow must receive requestOrigin, not that bind origin.
+function bindAddressRequest(payload: unknown): NextRequest {
+  return new NextRequest("http://0.0.0.0:3000/api/orgs/org-1/members", {
+    body: JSON.stringify(payload),
+    headers: {
+      "content-type": "application/json",
+      host: "0.0.0.0:3000",
+      "x-forwarded-host": "platform.experientiallabs.ai",
+      "x-forwarded-proto": "https"
+    },
+    method: "POST"
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   requireAuthenticatedUser.mockResolvedValue({ id: "user-1" });
@@ -52,6 +68,10 @@ beforeEach(() => {
   createServiceRoleSupabaseClient.mockReturnValue({});
   isPlatformAdmin.mockResolvedValue(false);
   isLastOrgAdmin.mockResolvedValue(false);
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("GET /api/orgs/[orgId]/members", () => {
@@ -111,6 +131,33 @@ describe("POST /api/orgs/[orgId]/members", () => {
       expect.anything(),
       expect.objectContaining({ orgId: "org-1", orgName: "Acme", email: "n@x.co", role: "user" })
     );
+  });
+
+  it("passes the public origin into the shared invite flow, not the 0.0.0.0 bind address", async () => {
+    // Empty, not unset: a valid ambient EXPLABS_WEBAPP_URL would otherwise
+    // win over the forwarded headers this case is pinning.
+    vi.stubEnv("EXPLABS_WEBAPP_URL", "");
+    isOrgAdmin.mockResolvedValue(true);
+    addOrInviteMember.mockResolvedValue({
+      action: "added",
+      status: 201,
+      membership: { org_id: "org-1", user_id: "user-9", role: "user" }
+    });
+
+    const response = await POST(
+      bindAddressRequest({ email: "n@x.co", role: "user" }),
+      context
+    );
+
+    expect(response.status).toBe(201);
+    expect(addOrInviteMember).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        origin: "https://platform.experientiallabs.ai"
+      })
+    );
+    const input = addOrInviteMember.mock.calls[0][1] as { origin: string };
+    expect(input.origin).not.toContain("0.0.0.0");
   });
 
   it("rejects roles outside the two-rung ladder", async () => {

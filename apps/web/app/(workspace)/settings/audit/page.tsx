@@ -46,7 +46,7 @@ export default async function AuditLogPage() {
         <h2 className="m-0 text-ink text-base font-semibold">Audit log</h2>
         <p className="mt-2 max-w-[780px] text-muted text-[13px] leading-relaxed">
           Administrative activity in this organization: API key lifecycle, membership and invite
-          changes, billing settings, and data deletion — who did what, and when.
+          changes, billing settings, and data deletion: who did what, and when.
         </p>
       </div>
       <AuditLogPanel orgId={org.id} />

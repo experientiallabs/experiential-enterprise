@@ -36,9 +36,20 @@ describe("fetchWelcomeData (the success step's one endpoint seam)", () => {
       mintedSecret: null,
       keyPrefix: "xpl_ab12cd34",
       grantedUsd: 20,
-      canManageKeys: true
+      canManageKeys: true,
+      isYcCompany: false
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes the org's YC-company flag through for the modal's co-branding", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(200, summary({ apiKey: { keyPrefix: "xpl_ab12cd34" }, isYcCompany: true }))
+      )
+    );
+    expect((await fetchWelcomeData())?.isYcCompany).toBe(true);
   });
 
   it("mints the workspace's first key through the existing mint route", async () => {
@@ -61,6 +72,23 @@ describe("fetchWelcomeData (the success step's one endpoint seam)", () => {
     });
   });
 
+  it("force-mints a fresh key on re-trigger even when the org already holds one", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(200, summary({ apiKey: { keyPrefix: "xpl_ab12cd34" } }))
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, { apiKey: { id: "key-2" }, secret: "xpl_" + "e".repeat(40) })
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const data = await fetchWelcomeData(true);
+
+    expect(data?.mintedSecret).toBe("xpl_" + "e".repeat(40));
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/keys");
+  });
+
   it("never mints for a plain member and still reports the grant", async () => {
     const fetchMock = vi
       .fn()
@@ -73,7 +101,8 @@ describe("fetchWelcomeData (the success step's one endpoint seam)", () => {
       mintedSecret: null,
       keyPrefix: null,
       grantedUsd: 20,
-      canManageKeys: false
+      canManageKeys: false,
+      isYcCompany: false
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -114,7 +143,8 @@ describe("fetchWelcomeData (the success step's one endpoint seam)", () => {
       mintedSecret: null,
       keyPrefix: null,
       grantedUsd: 20,
-      canManageKeys: true
+      canManageKeys: true,
+      isYcCompany: false
     });
   });
 });

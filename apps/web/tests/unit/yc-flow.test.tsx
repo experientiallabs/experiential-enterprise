@@ -16,16 +16,12 @@ vi.mock("@/lib/telemetry/client", () => ({ captureTelemetryEvent }));
 
 import YcPage from "@/app/yc/page";
 import { SigninForm } from "@/app/signin/SigninForm";
-import { YcWelcome } from "@/components/yc/YcWelcome";
 import type { YcClaimState } from "@/lib/types";
 
-// The prompt YcWelcome embeds is buildGatewaySetupPrompt, whose content is
-// pinned by tests/unit/setup-prompts.test.ts; this suite covers the FLOW —
-// the /yc short link, the yc=1 threading through every auth path, and the
-// auto-claim surface.
+// This suite covers the FLOW — the /yc short link and the yc=1 threading
+// through every auth path. The signed-in claim surface (YcClaimRedirect) and
+// the welcome modal it lands on have their own suites.
 
-const WEB = "https://platform.experientiallabs.ai";
-const API = "https://api.experientiallabs.ai";
 const MINTED_KEY = "xpl_ycdeal1234567890";
 
 type FetchScript = {
@@ -102,7 +98,7 @@ describe("SigninForm YC threading", () => {
 
   it("stays in place after an email-code login so the signed-in render auto-claims", async () => {
     // The code flow's success must refresh /signin?yc=1 (whose signed-in
-    // render is YcWelcome, the auto-claim surface) — never navigate away.
+    // render is YcClaimRedirect, the auto-claim surface) — never navigate away.
     const fetchMock = vi.fn(async (url: unknown) => {
       const target = String(url);
       if (target === "/auth/otp") {
@@ -152,9 +148,7 @@ describe("SigninForm YC threading", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<SigninForm inviteToken={null} prefillEmail="founder@company.com" />);
 
-    // Trial build: the plain form opens in password mode, so the idle submit
-    // reads "Sign in"; the point stands, nothing was fetched on mount.
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled());
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -186,7 +180,6 @@ describe("SigninForm YC threading", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<SigninForm inviteToken={null} prefillEmail="founder@company.com" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.change(await screen.findByLabelText("Sign-in code"), {
       target: { value: "123456" }
@@ -194,125 +187,5 @@ describe("SigninForm YC threading", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/signin?yc=1"));
-  });
-});
-
-describe("YcWelcome", () => {
-  it("auto-claims on mount and shows grant, key, and the prompt with the live key", async () => {
-    const fetchMock = stubYcFetch();
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-
-    expect(await screen.findByText("$526 in credits applied")).toBeInTheDocument();
-    // The claim fired with no button involved.
-    expect(fetchMock).toHaveBeenCalledWith("/api/orgs/org-1/yc/claim", { method: "POST" });
-    expect(captureTelemetryEvent).toHaveBeenCalledWith("yc_grant_claimed", { granted_usd: 526 });
-
-    const prompt = screen.getByTestId("yc-setup-prompt");
-    expect(prompt.textContent).toContain(`EXPLABS_API_KEY=${MINTED_KEY}`);
-    expect(prompt.textContent).toContain("do NOT stop to ask me questions");
-    // The minted secret renders once alongside the prompt, like the modal's
-    // success step, and the copy control grabs the whole prompt.
-    expect(screen.getByText(MINTED_KEY)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copy setup prompt" })).toBeInTheDocument();
-    expect(screen.getByTestId("yc-grant-panel").textContent).toContain("Nov 19, 2026");
-  });
-
-  it("celebrates a fresh claim with the applied amount and a confetti burst", async () => {
-    // The auto-claim's success moment mirrors the login modal's: the "$526 in
-    // credits applied" line over a one-shot ConfettiBurst.
-    stubYcFetch();
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-
-    expect(await screen.findByTestId("yc-grant-applied")).toHaveTextContent(
-      "$526 in credits applied"
-    );
-    expect(screen.getByTestId("confetti-burst")).toBeInTheDocument();
-  });
-
-  it("fronts the paste CTA and links to Overview and Credits", async () => {
-    stubYcFetch();
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-    await screen.findByText("$526 in credits applied");
-
-    expect(
-      screen.getByRole("heading", { name: "Paste this into your coding agent" })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Go to Overview" }).getAttribute("href")).toBe(
-      "/overview"
-    );
-    expect(screen.getByRole("link", { name: "Credits" }).getAttribute("href")).toBe("/credits");
-  });
-
-  it("is idempotent: a repeat login shows the live grant state, not an error", async () => {
-    stubYcFetch({
-      welcome: {
-        status: 200,
-        payload: {
-          org: { id: "org-1" },
-          apiKey: { keyPrefix: "xpl_ab12cd34", keySuffix: "f2e1" },
-          canManageKeys: true,
-          credit: { grantedUsd: 546, billableUsd: 12 }
-        }
-      },
-      claim: {
-        status: 409,
-        payload: {
-          error: "This account has already claimed the YC grant.",
-          code: "yc_already_claimed"
-        }
-      },
-      budgetYc: {
-        claimed_at: "2026-08-18T12:00:00Z",
-        expires_at: "2026-11-18T12:00:00Z",
-        remaining_estimate_usd: 300.5
-      }
-    });
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-
-    expect(await screen.findByText("Your org is already on the YC grant")).toBeInTheDocument();
-    const panel = screen.getByTestId("yc-grant-panel");
-    expect(panel.textContent).toContain("$300.50");
-    expect(panel.textContent).toContain("Nov 18, 2026");
-    // A returning founder does not get the confetti moment again.
-    expect(screen.queryByTestId("confetti-burst")).not.toBeInTheDocument();
-    expect(captureTelemetryEvent).not.toHaveBeenCalledWith(
-      "yc_grant_claimed",
-      expect.anything()
-    );
-    // No plaintext exists for the org's key, so the prompt carries the
-    // fill-in slot and the prefix plus stored last-4 render as recognition only.
-    expect(screen.getByTestId("yc-setup-prompt").textContent).toContain(
-      "<paste my org API key"
-    );
-    expect(screen.getByText(/xpl_ab12cd34…f2e1/)).toBeInTheDocument();
-  });
-
-  it("shows the duplicate message verbatim with the recovery line when no grant state is readable", async () => {
-    stubYcFetch({
-      claim: {
-        status: 409,
-        payload: {
-          error: "This account has already claimed the YC grant.",
-          code: "yc_already_claimed"
-        }
-      },
-      budgetYc: null
-    });
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-
-    expect(
-      await screen.findByText("This account has already claimed the YC grant.")
-    ).toBeInTheDocument();
-    expect(screen.getByText("DM me and claim your reward.")).toBeInTheDocument();
-  });
-
-  it("keeps the key and prompt when the claim fails outright", async () => {
-    stubYcFetch({ claim: { status: 500, payload: { error: "Backend exploded." } } });
-    render(<YcWelcome apiBaseUrl={API} webBaseUrl={WEB} />);
-
-    expect(await screen.findByText("Backend exploded.")).toBeInTheDocument();
-    expect(screen.getByTestId("yc-setup-prompt").textContent).toContain(
-      `EXPLABS_API_KEY=${MINTED_KEY}`
-    );
   });
 });

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono"
 // Every page carries its own metadata title through this template (the product owner, 2026-07-27);
 // the default covers redirect-only routes that never render.
 export const metadata: Metadata = {
-  title: { default: "Experiential", template: "%s — Experiential" },
+  title: { default: "Experiential", template: "%s · Experiential" },
   description: "Build simulations from your traces, evaluate against them, and serve optimized endpoints."
 };
 

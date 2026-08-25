@@ -109,28 +109,27 @@ type AuthFormProps = {
 
 /**
  * The one sign-in form, hosted by the /signin page (dark, invite-aware) and
- * the in-app login modal (light).
+ * the in-app login modal (light). Passwordless is FIRST-CLASS and the default:
+ * Google/GitHub OAuth and an emailed 6-digit sign-in code (enter an email, we
+ * send a code, entering it signs you in — and creates the account on first use
+ * if signups are open; the code IS the inbox proof, so a first sign-in is a
+ * verified account). Signup never sets a user-known password.
  *
- * TRIAL BUILD: password sign-in is the DEFAULT, and the emailed 6-digit code
- * is the alternative behind a "Sign in with email code" toggle. A cloud trial
- * VM cannot deliver the code — its mail lands in the stack-internal mail
- * catcher — so a password-first form is the only door that works out of the
- * box. Google/GitHub OAuth is unchanged.
- *
- * Everything about the code flow itself is unchanged: enter an email, we send
- * a code, entering it signs you in — and creates the account on first use if
- * signups are open; the code IS the inbox proof, so a first sign-in is a
- * verified account. Signup never sets a user-known password. A brand-new
- * account has no password until the user opts in through "Forgot password?"
- * (or "set a password" for a passwordless account), which emails a recovery
- * link via /auth/password/reset, so a password attempt on such an account
- * degrades to a uniform "invalid email or password" — and because that 401
- * deliberately never says whether the account exists, a rejected attempt also
- * offers the emailed-code path, so an email with no account never dead-ends
- * here. Every email-flow entry still opens in code mode: invite links (the
- * token can only ride the emailed-code signup), a code already sent, an
- * auto-send caller, and any bounce that arrives carrying an error code.
- * (Marketing signup lives at /signup and starts the same code flow.)
+ * Password sign-in is an OPTIONAL alternative (the product owner, 2026-08-21): the "Sign in
+ * with password" toggle reveals email+password fields that POST
+ * /auth/password/signin, and "Forgot password?" (or "set a password" for a
+ * passwordless account) emails a recovery link via /auth/password/reset. A
+ * brand-new account has no password until the user opts in through that flow.
+ * The password 401 DISTINGUISHES account existence (owner decision, 2026-08-24,
+ * bounded by the route's rate limits like /signup): a "no_account" rejection
+ * reveals a "Create an account" affordance (routed into the emailed-code flow,
+ * which creates the account on first use), while a "wrong_password" rejection
+ * shows a specific "Wrong password" message beside the reset affordance and a
+ * secondary emailed-code link. Exactly ONE branch renders per rejection: no
+ * generic error box stacked with a code paragraph. Invite links stay code-only
+ * (the token can only ride the emailed-code signup). The emailed-code path
+ * itself STAYS account-existence-neutral.
+ * (Marketing signup lives at /signup and starts the same code-first flow.)
  */
 export function AuthForm({
   inviteToken,
@@ -152,28 +151,17 @@ export function AuthForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [codeWasLastUsed, setCodeWasLastUsed] = useState(false);
   const [passwordWasLastUsed, setPasswordWasLastUsed] = useState(false);
-  // Trial build: password sign-in is the DEFAULT. A cloud trial VM cannot
-  // deliver the emailed code (its mail lands in the stack-internal mail
-  // catcher); local runs can still toggle to the code flow. Every email-flow
-  // entry keeps code mode: invite links (the token rides the emailed-code
-  // signup), callers that already sent or will auto-send a code, and any
-  // initialErrorCode — all three code-flow bounces (rate_limited,
-  // otp_send_failed, account_exists) render copy that tells the visitor to act
-  // in the code flow, so landing them in password mode contradicts the notice
-  // they are reading.
-  const [mode, setMode] = useState<"code" | "password">(
-    inviteToken !== null ||
-      initialCodeSentTo !== null ||
-      autoSendCode ||
-      initialErrorCode !== null
-      ? "code"
-      : "password"
-  );
+  // "code" is the passwordless default; "password" is the optional alternative.
+  // Invite links stay code-only (the token rides the emailed-code signup).
+  const [mode, setMode] = useState<"code" | "password">("code");
   const [password, setPassword] = useState("");
-  // A password attempt came back 401. The uniform rejection can mean "no such
-  // account" just as well as "wrong password", so it unlocks the emailed-code
-  // offer below the error — the route that creates the account if none exists.
-  const [passwordRejected, setPasswordRejected] = useState(false);
+  // Which branch the last password 401 selected, or null when there is none.
+  // "no_account" reveals the Create-an-account affordance (into the emailed-code
+  // flow, which creates the account on first use); "wrong_password" shows the
+  // specific "Wrong password" message with the reset + emailed-code offers.
+  const [passwordRejection, setPasswordRejection] = useState<
+    "no_account" | "wrong_password" | null
+  >(null);
   // The address a code was sent to; non-null renders the code-entry stage.
   // Bound to the exact address — editing the email resets to the send stage.
   // Seeded from initialCodeSentTo when the caller already sent a code.
@@ -184,6 +172,20 @@ export function AuthForm({
   // it never sends again, so a re-render or strict-mode's double effect invoke
   // cannot email a second code.
   const autoSentRef = useRef(false);
+  // De-dupe the OTP send. requestCode is reachable from several intents (the
+  // auto-send effect, Continue, "Create an account", the code-mode submit), and
+  // more than one can fire for a SINGLE user action (e.g. the auto-send effect
+  // is still in flight when the user clicks Continue). GoTrue reuses the same
+  // OTP token within smtp_max_frequency and emails it AGAIN, so the user gets
+  // two identical codes. These refs make a send fire at most once per address:
+  // requestedForEmailRef remembers the address a code was already requested for
+  // (seeded when a caller pre-sent one via initialCodeSentTo), and
+  // sendInFlightRef blocks a concurrent second send. Only an explicit "Resend
+  // code" ({ force: true }) deliberately re-sends; editing the email clears both.
+  const requestedForEmailRef = useRef<string | null>(
+    initialCodeSentTo ? initialCodeSentTo.trim().toLowerCase() : null
+  );
+  const sendInFlightRef = useRef(false);
 
   // localStorage is read after mount so server and first client render agree.
   useEffect(() => {
@@ -220,7 +222,23 @@ export function AuthForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function requestCode(): Promise<void> {
+  async function requestCode(options?: { force?: boolean }): Promise<void> {
+    const force = options?.force === true;
+    const target = email.trim().toLowerCase();
+    const alreadyRequested = requestedForEmailRef.current === target;
+    // Skip a duplicate GoTrue send (it would email a second identical code): a
+    // send is already in flight, or one already went out for this address and
+    // this is not an explicit resend. Still advance to the code-entry stage so
+    // whichever intent called is not stranded on the email stage.
+    if (!force && (sendInFlightRef.current || alreadyRequested)) {
+      if (alreadyRequested && !sendInFlightRef.current && codeSentTo === null) {
+        setCode("");
+        setCodeSentTo(email);
+      }
+      return;
+    }
+    sendInFlightRef.current = true;
+    requestedForEmailRef.current = target;
     setError(null);
     setNotice(null);
     setIsSubmitting(true);
@@ -233,10 +251,13 @@ export function AuthForm({
           method: "POST"
         });
       } catch {
+        // The send did not reach GoTrue, so clear the guard to allow a retry.
+        requestedForEmailRef.current = null;
         setError("Couldn't reach the server. Check your connection and try again.");
         return;
       }
       if (!response.ok) {
+        requestedForEmailRef.current = null;
         const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
         setError(typeof payload?.error === "string" ? payload.error : "Couldn't send the code.");
         return;
@@ -246,6 +267,7 @@ export function AuthForm({
       setCode("");
       setCodeSentTo(email);
     } finally {
+      sendInFlightRef.current = false;
       setIsSubmitting(false);
     }
   }
@@ -291,7 +313,7 @@ export function AuthForm({
   async function signInWithPassword(): Promise<void> {
     setError(null);
     setNotice(null);
-    setPasswordRejected(false);
+    setPasswordRejection(null);
     setIsSubmitting(true);
     try {
       let response: Response;
@@ -306,15 +328,20 @@ export function AuthForm({
         return;
       }
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
-        setError(
-          typeof payload?.error === "string" ? payload.error : "Invalid email or password."
-        );
-        // Only the uniform 401 unlocks the code offer: a malformed-request 400
-        // is fixed by editing the fields, not by switching flows.
+        const payload = (await response.json().catch(() => null)) as {
+          code?: unknown;
+          error?: unknown;
+        } | null;
+        // A 401 selects exactly ONE branch (no_account vs wrong_password) and
+        // renders no generic error box; every other failure (400, 429, 5xx) is
+        // a plain error the user fixes by editing fields or retrying.
         if (response.status === 401) {
-          setPasswordRejected(true);
+          setPasswordRejection(payload?.code === "no_account" ? "no_account" : "wrong_password");
+          return;
         }
+        setError(
+          typeof payload?.error === "string" ? payload.error : "Couldn't sign you in. Try again."
+        );
         return;
       }
       recordAuthMethod("password");
@@ -329,6 +356,7 @@ export function AuthForm({
   async function requestPasswordReset(): Promise<void> {
     setError(null);
     setNotice(null);
+    setPasswordRejection(null);
     if (email.trim().length === 0) {
       setError("Enter your email above first.");
       return;
@@ -355,16 +383,17 @@ export function AuthForm({
     setMode(next);
     setError(null);
     setNotice(null);
-    setPasswordRejected(false);
+    setPasswordRejection(null);
     setCodeSentTo(null);
     setPassword("");
   }
 
-  // The escape hatch out of the password rejection: switch to the emailed-code
+  // The way out of a password rejection (both "Create an account" for no_account
+  // and "use a sign-in code" for wrong_password): switch to the emailed-code
   // flow and send the code to the address already typed (the user entered it
   // themselves, exactly like pressing Continue in code mode). Entering the code
-  // signs them in — and creates the account on first use — so "no such account"
-  // resolves here instead of dead-ending on the uniform 401.
+  // signs them in (and creates the account on first use), so a no-account email
+  // resolves here instead of dead-ending on the 401.
   async function continueWithEmailedCode(): Promise<void> {
     switchMode("code");
     await requestCode();
@@ -425,8 +454,10 @@ export function AuthForm({
             name="email"
             onChange={(event) => {
               setEmail(event.target.value);
-              // A sent code is bound to the address it was issued for.
+              // A sent code is bound to the address it was issued for; a new
+              // address is a new intent, so clear the send guard too.
               setCodeSentTo(null);
+              requestedForEmailRef.current = null;
             }}
             placeholder="you@company.com"
             required
@@ -451,16 +482,21 @@ export function AuthForm({
               value={password}
               className={classes.input}
             />
-            <div className="flex items-center justify-end mt-1.5">
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={() => void requestPasswordReset()}
-                className={classes.smallButton}
-              >
-                Forgot password?
-              </button>
-            </div>
+            {/* No account to reset in the no_account branch, so the reset
+                affordance hides there; wrong_password keeps it as the way to
+                recover a real account. */}
+            {passwordRejection !== "no_account" && (
+              <div className="flex items-center justify-end mt-1.5">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => void requestPasswordReset()}
+                  className={classes.smallButton}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
           </div>
         )}
         {mode === "code" && codeSentTo !== null && (
@@ -492,7 +528,7 @@ export function AuthForm({
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={() => void requestCode()}
+                onClick={() => void requestCode({ force: true })}
                 className={classes.smallButton}
               >
                 Resend code
@@ -502,15 +538,18 @@ export function AuthForm({
         )}
         {notice && <div className={classes.noticeBox}>{notice}</div>}
         {error && <div className={classes.errorBox}>{error}</div>}
-        {/* The 401 is uniformly "invalid email or password" on purpose (no
-            account-existence oracle), so the offer renders on EVERY rejection:
-            it names both readings and routes to the emailed-code flow, which
-            signs in an existing account and creates a missing one. */}
-        {mode === "password" && passwordRejected && (
-          <div className={classes.noticeBox}>
+        {/* Exactly ONE branch per password 401: the route now distinguishes
+            account existence (owner decision, bounded by its rate limits), so a
+            rejection no longer stacks a generic error box with a code paragraph.
+            no_account reveals a Create-an-account affordance into the
+            emailed-code flow (which creates the account on first use);
+            wrong_password names the failure and offers the reset + code escape
+            hatches. Both animate in, matching the app's reveal idiom. */}
+        {mode === "password" && passwordRejection === "no_account" && (
+          <div className={`${classes.noticeBox} animate-reveal`}>
             <p className="m-0">
-              No account yet, or never set a password? Continue with an emailed sign-in code
-              instead — entering it signs you in, and creates your account if you don't have one.
+              No account for that email. Create one with a sign-in code: entering the emailed
+              code signs you in and creates your account on first use.
             </p>
             <button
               type="button"
@@ -518,9 +557,26 @@ export function AuthForm({
               onClick={() => void continueWithEmailedCode()}
               className={classes.smallButton}
             >
-              Email me a sign-in code
+              Create an account
             </button>
           </div>
+        )}
+        {mode === "password" && passwordRejection === "wrong_password" && (
+          <>
+            <div className={`${classes.errorBox} animate-reveal`}>
+              Wrong password. Reset it with &ldquo;Forgot password?&rdquo; above.
+            </div>
+            <div className={`${classes.noticeBox} animate-reveal`}>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => void continueWithEmailedCode()}
+                className={classes.smallButton}
+              >
+                Sign in with an emailed code instead
+              </button>
+            </div>
+          </>
         )}
         <button
           type="submit"
@@ -531,8 +587,7 @@ export function AuthForm({
           {showLastUsedBadge && <LastUsedBadge inverted tone={tone} />}
         </button>
       </form>
-      {/* Trial build: password is the default; the emailed-code flow is the
-          toggle (it works on local runs, where the mail catcher is reachable).
+      {/* Passwordless stays the default; password is the optional alternative.
           Invite links are code-only, so the toggle is hidden for them. */}
       {inviteToken === null && (
         <div className="mt-4 text-center">

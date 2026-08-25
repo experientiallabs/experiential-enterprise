@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isPlatformAdmin } from "@/lib/auth/admin";
 import { getDataSource } from "@/lib/data-source";
 import { jsonError } from "@/lib/http";
+import { revalidateModelsCatalog } from "@/lib/models-catalog/server";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,9 @@ export async function PUT(request: NextRequest): Promise<Response> {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const models = await getDataSource().replaceAdminRecommendedModels(parsed.slugs);
+    // preferred_rank renders on the shared cached public catalog; bust it so
+    // the new order shows on the next read instead of waiting out the window.
+    revalidateModelsCatalog();
     return NextResponse.json({ models });
   } catch (error) {
     return jsonError(error);

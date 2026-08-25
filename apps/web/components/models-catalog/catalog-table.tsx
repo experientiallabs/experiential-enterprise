@@ -13,7 +13,15 @@ import { useRouter } from "next/navigation";
 import { Columns2, Plus, Search, Sparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 
-import { ModalityIcons, ParamChips, PercentOffChip, PromoChipBadge, ProviderBadge, StatusDot } from "./badges";
+import {
+  ModalityIcons,
+  ParamChips,
+  PercentOffChip,
+  PromoChipBadge,
+  PromoPrice,
+  ProviderBadge,
+  StatusDot
+} from "./badges";
 import { ModelIcon } from "./model-icon";
 import { RecommendedStar } from "./recommended-star";
 import {
@@ -30,7 +38,7 @@ import {
   type RouteRow
 } from "./filtering";
 import { modelFamily, modelFamilyKey, modelIconKey } from "@/lib/models-catalog/families";
-import { promoChipsBySlug } from "@/lib/models-catalog/promotions";
+import { promoChipsBySlug, promoEffectivePrice } from "@/lib/models-catalog/promotions";
 import { rankByFrontier } from "@/lib/models-catalog/ranking";
 import { FilterMenu } from "./filter-menu";
 import { Button, buttonClassName } from "@/components/ui/Button";
@@ -56,9 +64,13 @@ import { modelPath } from "@/lib/routes";
 import type { CatalogEntry, ModelPromotion } from "@/lib/models-catalog/types";
 
 // The recommended models collapse into one always-open band near the top
-// (under Promotional); every other model folds into a collapsed per-family
-// section below it (the product owner, r2: show the recommended set prominently, keep the
-// rest one click away rather than deleting them).
+// (under Promotional); every model ALSO folds into its collapsed per-family
+// section below (the product owner, r2: show the recommended set prominently, keep the
+// rest one click away rather than deleting them). Like Promotional, the band
+// is an additive overlay: a starred model renders there AND under its family,
+// so browsing a family never has silent holes (the product owner, 2026-08-24 — reversing
+// the original move-not-copy partition after GPT-5.6 Sol/Luna vanished from
+// the GPT fold).
 const RECOMMENDED_GROUP = "__recommended__";
 
 // The promotional models band: a table section ABOVE Recommended holding every
@@ -72,6 +84,21 @@ type CatalogRow = {
   entry: CatalogEntry;
   group: string;
 };
+
+/** Per-lane input/output prices, for lane-aware promo repricing. */
+function inputLanes(entry: CatalogEntry) {
+  return entry.providers.map((row) => ({
+    provider: row.provider,
+    micro: row.input_micro_usd_per_million
+  }));
+}
+
+function outputLanes(entry: CatalogEntry) {
+  return entry.providers.map((row) => ({
+    provider: row.provider,
+    micro: row.output_micro_usd_per_million
+  }));
+}
 
 const MODALITY_OPTIONS = ["text", "image", "audio", "video", "pdf"];
 const PARAM_OPTIONS = ["tools", "reasoning", "temperature", "structured_outputs", "logprobs"];
@@ -139,6 +166,13 @@ export function CatalogTable({
   // base. A signed-out viewer (or a viewer with no custom models) gets an empty
   // list and the base catalog stands; any read failure leaves the base intact.
   const [orgEntries, setOrgEntries] = useState<CatalogEntry[]>([]);
+  // Audience-resolved promotions for the signed-in viewer. The server render
+  // paints the shared ANONYMOUS promo set (label-scoped promos withheld); the
+  // same hydrate round trip that brings the org's models brings the viewer's
+  // promotions, which then replace the anonymous set. Org switches share the
+  // org-models overlay's staleness window: #683's ActiveOrg context re-runs
+  // this effect on switch, refreshing entries and promotions together.
+  const [viewerPromotions, setViewerPromotions] = useState<ModelPromotion[] | null>(null);
   useEffect(() => {
     if (!hydrateOrgModels) {
       return;
@@ -150,9 +184,18 @@ export function CatalogTable({
         if (!response.ok) {
           return;
         }
-        const payload = (await response.json()) as { models?: CatalogEntry[] };
-        if (active && payload.models && payload.models.length > 0) {
+        const payload = (await response.json()) as {
+          models?: CatalogEntry[];
+          promotions?: ModelPromotion[];
+        };
+        if (!active) {
+          return;
+        }
+        if (payload.models && payload.models.length > 0) {
           setOrgEntries(payload.models);
+        }
+        if (payload.promotions) {
+          setViewerPromotions(payload.promotions);
         }
       } catch {
         // The public base catalog stands on its own; no error surface needed.
@@ -162,6 +205,7 @@ export function CatalogTable({
       active = false;
     };
   }, [hydrateOrgModels]);
+  const effectivePromotions = viewerPromotions ?? promotions;
 
   // Merge the org overlay over the public base, keyed by SLUG so an org model
   // SHADOWS the public model of the same slug (that is how the backend resolves
@@ -206,10 +250,10 @@ export function CatalogTable({
   // single RANKED chip (free outranks percent — promotions.ts owns the rule),
   // memoized as an O(1) lookup for the render hot path, plus the percent promos
   // whose chips land on family headers.
-  const promoChips = useMemo(() => promoChipsBySlug(promotions), [promotions]);
+  const promoChips = useMemo(() => promoChipsBySlug(effectivePromotions), [effectivePromotions]);
   const percentPromos = useMemo(
-    () => promotions.filter((promo) => promo.percent_off > 0),
-    [promotions]
+    () => effectivePromotions.filter((promo) => promo.percent_off > 0),
+    [effectivePromotions]
   );
   // The Promotional section: the union of every promo's resolved slugs (promos
   // in display_order; a slug's first promo wins its position), resolved against
@@ -220,7 +264,7 @@ export function CatalogTable({
     const bySlug = new Map(modelRows.map((entry) => [entry.model.slug, entry]));
     const seen = new Set<string>();
     const resolved: CatalogEntry[] = [];
-    for (const promo of [...promotions].sort((a, b) => a.display_order - b.display_order)) {
+    for (const promo of [...effectivePromotions].sort((a, b) => a.display_order - b.display_order)) {
       for (const slug of promo.slugs) {
         if (seen.has(slug)) {
           continue;
@@ -233,7 +277,7 @@ export function CatalogTable({
       }
     }
     return resolved;
-  }, [modelRows, promotions]);
+  }, [modelRows, effectivePromotions]);
   // Families carrying an active percent-off promo (their header wears the
   // chip) sort ahead of the other family sections — data-driven off the
   // promos' family_keys, never a hardcoded family name.
@@ -242,9 +286,11 @@ export function CatalogTable({
     [percentPromos]
   );
   // The model view's rows, each carrying its band: the Promotional section
-  // first, then Recommended, then promo-chipped families, then the rest. The
-  // partition is stable, so within each group the families keep rankByFrontier
-  // order (DataTable bands follow each key's first occurrence).
+  // first, then Recommended, then promo-chipped families, then the rest.
+  // Promotional and Recommended are additive overlays — their models render
+  // again under their family — so only the family split partitions. The order
+  // is stable, so within each group the families keep rankByFrontier order
+  // (DataTable bands follow each key's first occurrence).
   const tableRows = useMemo<CatalogRow[]>(() => {
     const recommended: CatalogRow[] = [];
     const promotedFamilies: CatalogRow[] = [];
@@ -252,7 +298,6 @@ export function CatalogTable({
     for (const entry of modelRows) {
       if (entry.model.preferred_rank !== null) {
         recommended.push({ entry, group: RECOMMENDED_GROUP });
-        continue;
       }
       const key = modelFamilyKey(entry);
       (promoFamilyKeys.has(key) ? promotedFamilies : otherFamilies).push({ entry, group: key });
@@ -331,7 +376,7 @@ export function CatalogTable({
               {requiresOwnKey(entry) ? (
                 <span
                   className="shrink-0 rounded-full bg-warning-soft px-1.5 py-px font-mono text-[9.5px] uppercase tracking-wide text-warning"
-                  title="Requires your own provider key — not hosted on Experiential credits"
+                  title="Requires your own provider key, not hosted on Experiential credits"
                 >
                   your key
                 </span>
@@ -376,21 +421,38 @@ export function CatalogTable({
         header: "Input $/M",
         align: "right",
         defaultDirection: "asc",
-        sortValue: ({ entry }) => cheapestInputMicro(entry),
-        cell: ({ entry }) => (
-          <span className="inline-flex items-center gap-1.5">
-            {entry.providers.some(hasCacheDiscount) ? <CacheTag /> : null}
-            <Num>{formatPerMillionUsd(cheapestInputMicro(entry))}</Num>
-          </span>
-        )
+        // Sort by what a promoted model actually costs, not its crossed-out
+        // list price — otherwise a FREE model sorts as expensive. Lane-aware:
+        // a lane-scoped promo reprices only its covered lanes' best price.
+        sortValue: ({ entry }) =>
+          promoEffectivePrice(promoChips.get(entry.model.slug), inputLanes(entry)).effective,
+        cell: ({ entry }) => {
+          const price = promoEffectivePrice(promoChips.get(entry.model.slug), inputLanes(entry));
+          return (
+            <span className="inline-flex items-center gap-1.5">
+              {entry.providers.some(hasCacheDiscount) ? <CacheTag /> : null}
+              <Num>
+                <PromoPrice effective={price.effective} list={price.list} />
+              </Num>
+            </span>
+          );
+        }
       },
       {
         id: "output",
         header: "Output $/M",
         align: "right",
         defaultDirection: "asc",
-        sortValue: ({ entry }) => cheapestOutputMicro(entry),
-        cell: ({ entry }) => <Num>{formatPerMillionUsd(cheapestOutputMicro(entry))}</Num>
+        sortValue: ({ entry }) =>
+          promoEffectivePrice(promoChips.get(entry.model.slug), outputLanes(entry)).effective,
+        cell: ({ entry }) => {
+          const price = promoEffectivePrice(promoChips.get(entry.model.slug), outputLanes(entry));
+          return (
+            <Num>
+              <PromoPrice effective={price.effective} list={price.list} />
+            </Num>
+          );
+        }
       },
       {
         id: "modalities",

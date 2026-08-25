@@ -15,6 +15,8 @@ import {
 
 type OrgEntitlementsCardProps = {
   orgId: string;
+  /** Fires after a grant or revoke lands, so a host view can refetch its own state. */
+  onChanged?: () => void;
 };
 
 /**
@@ -23,7 +25,7 @@ type OrgEntitlementsCardProps = {
  * without one the feature is absent from the org's product entirely. Grants
  * and revokes are audit-logged by the backend.
  */
-export function OrgEntitlementsCard({ orgId }: OrgEntitlementsCardProps) {
+export function OrgEntitlementsCard({ orgId, onChanged }: OrgEntitlementsCardProps) {
   const [rows, setRows] = useState<OrgEntitlement[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -62,6 +64,7 @@ export function OrgEntitlementsCard({ orgId }: OrgEntitlementsCardProps) {
         throw new Error(body?.error ?? `The change failed (${response.status}).`);
       }
       await refresh();
+      onChanged?.();
     } catch (changeError) {
       setError(changeError instanceof Error ? changeError.message : "The change failed.");
     } finally {
@@ -76,7 +79,7 @@ export function OrgEntitlementsCard({ orgId }: OrgEntitlementsCardProps) {
       <h3 className="m-0 text-[13px] font-semibold text-ink">Enterprise entitlements</h3>
       <p className="mb-3 mt-1 text-[12px] text-muted">
         A grant licenses this organization for one enterprise feature. Without a grant the
-        feature is absent from their product — no locked pages, no upsell. Every change is
+        feature is absent from their product, no locked pages, no upsell. Every change is
         audit-logged.
       </p>
       {rows === null && !error ? (

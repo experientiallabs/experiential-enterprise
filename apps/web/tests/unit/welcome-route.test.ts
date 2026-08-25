@@ -9,6 +9,7 @@ const createServiceRoleSupabaseClient = vi.hoisted(() => vi.fn());
 const isOrgAdmin = vi.hoisted(() => vi.fn());
 const getOrgBudget = vi.hoisted(() => vi.fn());
 const readLaunchGrantUsd = vi.hoisted(() => vi.fn());
+const orgIsYcCompany = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/server", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth/server")>("@/lib/auth/server");
@@ -23,6 +24,7 @@ vi.mock("@/lib/auth/admin", () => ({ createServiceRoleSupabaseClient, isPlatform
 vi.mock("@/lib/auth/admin-orgs", () => ({ isOrgAdmin }));
 vi.mock("@/lib/data-source", () => ({ getDataSource: () => ({ getOrgBudget }) }));
 vi.mock("@/lib/billing/launch-grant", () => ({ readLaunchGrantUsd }));
+vi.mock("@/lib/billing/tool-accounts-server", () => ({ orgIsYcCompany }));
 
 import { GET } from "@/app/api/welcome/route";
 
@@ -58,6 +60,7 @@ beforeEach(() => {
     credit_balance_usd: 20
   });
   readLaunchGrantUsd.mockResolvedValue(20);
+  orgIsYcCompany.mockResolvedValue(false);
 });
 
 describe("GET /api/welcome", () => {
@@ -75,6 +78,7 @@ describe("GET /api/welcome", () => {
       org: { id: "org-1", slug: "acme" },
       apiKey: { keyPrefix: "xpl_ab12cd34", keySuffix: "f2e1" },
       canManageKeys: true,
+      isYcCompany: false,
       credit: { grantedUsd: 20, billableUsd: 0 }
     });
     expect(getOrgBudget).toHaveBeenCalledWith("org-1");

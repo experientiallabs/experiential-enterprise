@@ -445,7 +445,7 @@ export const EXAMPLE_SUGGESTIONS: Suggestion[] = [
       "typically handles requests of this size well.",
     estimated_monthly_savings_usd: "38.20",
     evidence: [
-      "Example — this is what a suggestion looks like once you have usage.",
+      "Example, this is what a suggestion looks like once you have usage.",
       "9,400 requests averaged about 900 input and 180 output tokens each.",
       "The same tokens at Claude Haiku 4.5's list prices would have cost about a third as much.",
       "Savings figures are estimates from your recent token mix, never invoiced amounts."
@@ -460,7 +460,7 @@ export const EXAMPLE_SUGGESTIONS: Suggestion[] = [
       "prompt cache at a fraction of the input price.",
     estimated_monthly_savings_usd: "12.60",
     evidence: [
-      "Example — this is what a suggestion looks like once you have usage.",
+      "Example, this is what a suggestion looks like once you have usage.",
       "A 2,000-token system prompt repeated across 6,000 requests is 12M input tokens a month.",
       "Cached input tokens are typically priced at about a tenth of the normal input rate."
     ]

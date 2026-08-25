@@ -102,7 +102,7 @@ function chatSnippets(baseUrl: string): Record<CodeLanguage, string> {
       `curl "${baseUrl}/v1/chat/completions" \\`,
       '  -H "Authorization: Bearer $EXPLABS_API_KEY" \\',
       '  -H "Content-Type: application/json" \\',
-      `  -d '{"model": "claude-opus-5", "messages": [{"role": "user", "content": "Hello"}]}'`
+      `  -d '{"model": "qwen3.8-27b", "messages": [{"role": "user", "content": "Hello"}]}'`
     ].join("\n"),
     python: [
       "import os",
@@ -111,7 +111,7 @@ function chatSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "",
       `client = OpenAI(base_url="${baseUrl}/v1", api_key=os.environ["EXPLABS_API_KEY"])`,
       "response = client.chat.completions.create(",
-      '    model="claude-opus-5",',
+      '    model="qwen3.8-27b",',
       '    messages=[{"role": "user", "content": "Hello"}],',
       ")",
       "print(response.choices[0].message.content)"
@@ -124,7 +124,7 @@ function chatSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "  apiKey: process.env.EXPLABS_API_KEY,",
       "});",
       "const response = await client.chat.completions.create({",
-      '  model: "claude-opus-5",',
+      '  model: "qwen3.8-27b",',
       '  messages: [{ role: "user", content: "Hello" }],',
       "});",
       "console.log(response.choices[0].message.content);"
@@ -138,7 +138,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       `curl -N "${baseUrl}/v1/chat/completions" \\`,
       '  -H "Authorization: Bearer $EXPLABS_API_KEY" \\',
       '  -H "Content-Type: application/json" \\',
-      `  -d '{"model": "claude-opus-5", "stream": true, "messages": [{"role": "user", "content": "Hello"}]}'`
+      `  -d '{"model": "qwen3.8-27b", "stream": true, "messages": [{"role": "user", "content": "Hello"}]}'`
     ].join("\n"),
     python: [
       "import os",
@@ -147,7 +147,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "",
       `client = OpenAI(base_url="${baseUrl}/v1", api_key=os.environ["EXPLABS_API_KEY"])`,
       "stream = client.chat.completions.create(",
-      '    model="claude-opus-5",',
+      '    model="qwen3.8-27b",',
       '    messages=[{"role": "user", "content": "Hello"}],',
       "    stream=True,",
       ")",
@@ -162,7 +162,7 @@ function streamSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "  apiKey: process.env.EXPLABS_API_KEY,",
       "});",
       "const stream = await client.chat.completions.create({",
-      '  model: "claude-opus-5",',
+      '  model: "qwen3.8-27b",',
       '  messages: [{ role: "user", content: "Hello" }],',
       "  stream: true,",
       "});",
@@ -179,7 +179,7 @@ function responsesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       `curl "${baseUrl}/v1/responses" \\`,
       '  -H "Authorization: Bearer $EXPLABS_API_KEY" \\',
       '  -H "Content-Type: application/json" \\',
-      `  -d '{"model": "claude-opus-5", "input": "Hello"}'`
+      `  -d '{"model": "qwen3.8-27b", "input": "Hello"}'`
     ].join("\n"),
     python: [
       "import os",
@@ -188,7 +188,7 @@ function responsesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "",
       `client = OpenAI(base_url="${baseUrl}/v1", api_key=os.environ["EXPLABS_API_KEY"])`,
       "response = client.responses.create(",
-      '    model="claude-opus-5",',
+      '    model="qwen3.8-27b",',
       '    input="Hello",',
       ")",
       "print(response.output_text)"
@@ -201,7 +201,7 @@ function responsesSnippets(baseUrl: string): Record<CodeLanguage, string> {
       "  apiKey: process.env.EXPLABS_API_KEY,",
       "});",
       "const response = await client.responses.create({",
-      '  model: "claude-opus-5",',
+      '  model: "qwen3.8-27b",',
       '  input: "Hello",',
       "});",
       "console.log(response.output_text);"

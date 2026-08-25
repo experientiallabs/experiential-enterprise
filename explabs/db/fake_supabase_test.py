@@ -496,6 +496,39 @@ class FakeQuery:
                 )
         return [dict(target)]
 
+    def _admin_orgs_for_emails(self) -> list[JsonObject]:
+        """Mirror admin_orgs_for_emails: each email -> the org(s) it belongs to.
+
+        Joins the seeded ``auth_users`` (by lowercased email) through
+        ``organization_members`` to ``organizations``, one row per membership.
+        """
+        raw = self.rpc_params.get("in_emails")
+        emails_in = raw if isinstance(raw, list) else []
+        wanted = {str(email).lower() for email in emails_in}
+        members = self.client.tables.get("organization_members", [])
+        orgs = {org.get("id"): org for org in self.client.tables.get("organizations", [])}
+        out: list[JsonObject] = []
+        for user in self.client.tables.get("auth_users", []):
+            email = user.get("email")
+            if not isinstance(email, str) or email.lower() not in wanted:
+                continue
+            for member in members:
+                if member.get("user_id") != user.get("id"):
+                    continue
+                org = orgs.get(member.get("org_id"))
+                if org is None:
+                    continue
+                out.append(
+                    {
+                        "email": email.lower(),
+                        "org_id": org.get("id"),
+                        "org_slug": org.get("slug"),
+                        "org_name": org.get("name"),
+                        "member_role": member.get("role"),
+                    }
+                )
+        return out
+
     def _rpc(self) -> list[JsonObject] | list[str] | int | bool:
         """Run a fake RPC.
 
@@ -592,6 +625,7 @@ class FakeQuery:
             "gateway_key_limits_effective": self._gateway_key_limits_effective,
             "gateway_budget_balances": self._gateway_budget_balances,
             "auth_user_verification": self._auth_user_verification,
+            "admin_orgs_for_emails": self._admin_orgs_for_emails,
             "approve_org_join_request": self._approve_org_join_request,
         }
         handler = handlers.get(self.rpc_name or "")
@@ -3248,9 +3282,11 @@ class FakeQuery:
         expires = str(raw_expiry) if raw_expiry else _shift_months(now, 3).isoformat()
         billable = _fake_num(org.get("billable_spend_usd"))
 
-        # Apply the `yc` label (the YC-company gate), idempotent per (org, key).
+        # The `yc` label is the "YC promotion applied" gate: newly applied only
+        # when the org did not already carry it (mirrors SQL FOUND).
         labels = self.client.tables.setdefault("org_labels", [])
-        if not any(row.get("org_id") == org_id and row.get("key") == "yc" for row in labels):
+        label_exists = any(row.get("org_id") == org_id and row.get("key") == "yc" for row in labels)
+        if not label_exists:
             labels.append(
                 {
                     "id": self.client.next_id("org_labels"),
@@ -3260,11 +3296,13 @@ class FakeQuery:
                     "created_at": now.isoformat(),
                 }
             )
+        label_newly_applied = not label_exists
 
-        # The launch grant, one per org (source_ref = the org). Replay = no-op.
+        # Grant ONLY on the first-ever tagging — an org already carrying `yc`
+        # (a prior claim OR an operator backfill) gets no second grant.
         ledger = self.client.tables.setdefault("credit_ledger", [])
         grant_ref = f"yc-launch:{org_id}"
-        did_grant = not any(
+        did_grant = label_newly_applied and not any(
             row.get("source") == "yc_launch" and row.get("source_ref") == grant_ref
             for row in ledger
         )

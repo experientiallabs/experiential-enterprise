@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { recordAuditEvent } from "@/lib/audit";
 import { createServiceRoleSupabaseClient, isPlatformAdmin } from "@/lib/auth/admin";
+import { requestOrigin } from "@/lib/auth/redirects";
 import { requireAuthenticatedUser } from "@/lib/auth/server";
 import { addOrInviteMember, parseMemberPayload } from "@/lib/members/manage";
 
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest, context: Context): Promise<Next
       email: payload.email,
       role: payload.role,
       invitedBy: actor.id,
-      origin: request.nextUrl.origin
+      origin: requestOrigin(request)
     });
     if (result.action === "error") {
       return NextResponse.json({ error: result.message }, { status: result.status });

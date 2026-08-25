@@ -378,7 +378,7 @@ function BroadcastControls({
           aria-label="PostHog project API key for broadcast"
           className={INPUT_CLASS}
           onChange={(event) => setCaptureToken(event.target.value)}
-          placeholder="Project API key (phc_…) — capture is write-only"
+          placeholder="Project API key (phc_…), capture is write-only"
           type="text"
           value={captureToken}
         />

@@ -94,7 +94,7 @@ export function NlQuery({ orgId }: NlQueryProps) {
       </header>
       <p className="m-0 mt-0.5 text-[11px] text-muted-2">
         Ask a plain-language question about your own gateway usage. Answers read your usage
-        aggregates directly — no request bodies, nothing leaves your org.
+        aggregates directly, no request bodies, nothing leaves your org.
       </p>
 
       <form

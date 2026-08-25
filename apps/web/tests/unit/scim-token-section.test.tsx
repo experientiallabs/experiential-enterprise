@@ -64,7 +64,7 @@ describe("ScimTokenSection", () => {
 
     expect(await screen.findByText("xplscim_test_secret_ab12")).toBeInTheDocument();
     expect(
-      screen.getByText("Copy your SCIM token now — it is shown only once.")
+      screen.getByText("Copy your SCIM token now. It is shown only once.")
     ).toBeInTheDocument();
     expect(await screen.findByText("xplscim_…ab12")).toBeInTheDocument();
     const mint = calls.find((call) => call.method === "POST");

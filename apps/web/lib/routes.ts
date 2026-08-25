@@ -296,6 +296,11 @@ export function adminPlatformPath(): string {
 }
 
 /** The admin Promotions section: CRUD over the promotional-model set. */
+/** The Enterprise section: per-org /ee entitlement grants (operator-only). */
+export function adminEnterprisePath(): string {
+  return "/admin/enterprise";
+}
+
 export function adminPromotionsPath(): string {
   return "/admin/promotions";
 }

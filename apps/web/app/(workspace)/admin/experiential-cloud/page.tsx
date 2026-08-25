@@ -5,7 +5,7 @@ import {
 import { getDataSource } from "@/lib/data-source";
 import { fetchPublicCatalog } from "@/lib/models-catalog/server";
 
-export const metadata = { title: "Admin — Experiential Cloud" };
+export const metadata = { title: "Admin · Experiential Cloud" };
 
 export const dynamic = "force-dynamic";
 

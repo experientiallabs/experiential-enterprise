@@ -76,7 +76,7 @@ export function PromptCaptureCard({
           Prompt content capture
         </p>
         <p className="m-0 max-w-[640px] text-[12.5px] leading-relaxed text-muted">
-          Telemetry always records everything about a call except the data itself — model,
+          Telemetry always records everything about a call except the data itself, model,
           identity, lane, token counts, cost, latency, and the reason each request ended. The
           prompt groups on Insights are content-free fingerprints and work without this. Turn
           this on to also capture the prompt and response content for this organization&apos;s

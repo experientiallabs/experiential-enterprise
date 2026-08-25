@@ -10,6 +10,7 @@ import {
   buildFirstCallPrompt
 } from "@/components/auth/welcome-prompts";
 import { buildTraceTelemetryPrompt } from "@/components/trace-onboarding/setup-prompt";
+import { YCombinatorMark } from "@/components/yc/YCombinatorMark";
 import { formatGrantUsd } from "@/lib/money";
 import { docsPath } from "@/lib/routes";
 
@@ -30,6 +31,7 @@ export function WelcomeCelebration({
   webBaseUrl,
   apiBaseUrl,
   creditCaption = "in credits applied",
+  variant,
   onClose
 }: {
   /** The credit figure to announce, or null to omit the credits line. */
@@ -42,6 +44,12 @@ export function WelcomeCelebration({
   apiBaseUrl: string;
   /** Sub-line under the amount; the first-key reveal frames it as free start credit. */
   creditCaption?: string;
+  /**
+   * Custom-path branding seam: "yc" co-brands the modal (Y Combinator mark +
+   * "Your YC deal is applied" headline) for founders who came through the YC
+   * onboarding path. Undefined = the default look.
+   */
+  variant?: "yc";
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -74,12 +82,24 @@ export function WelcomeCelebration({
         <div className="flex flex-col gap-6" data-testid="login-success-step">
           <ConfettiBurst />
 
+          {variant === "yc" && (
+            <div className="flex justify-center" data-testid="welcome-yc-mark">
+              <YCombinatorMark className="h-8 w-8 rounded-md" />
+            </div>
+          )}
+
           {grantedUsd !== null && (
             <div
               className="flex flex-col items-center gap-1 py-2 text-center"
               data-testid="welcome-credits-line"
             >
-              <span className="mono-label text-accent">Welcome, you're in</span>
+              {variant === "yc" ? (
+                <span className="text-[15px] font-medium text-ink">
+                  Your YC deal is applied 🎉
+                </span>
+              ) : (
+                <span className="mono-label text-accent">Welcome, you're in</span>
+              )}
               <span className="text-[clamp(48px,12vw,72px)] font-semibold leading-none tracking-tight text-ink">
                 {formatGrantUsd(grantedUsd)}
               </span>
@@ -96,7 +116,9 @@ export function WelcomeCelebration({
                 </code>
                 <CopyButton value={keyToShow} label="Copy API key" />
               </div>
-              <p className="m-0 mt-1.5 text-[11px] text-muted">Shown once, copy it now.</p>
+              <p className="m-0 mt-1.5 text-[13px] font-medium text-muted">
+                This key won&apos;t be shown again. Copy it now.
+              </p>
             </div>
           )}
 

@@ -94,6 +94,7 @@ from explabs.gateway.catalog import (
     OrgAwareRouteResolver,
 )
 from explabs.gateway.control_store import PostgresGatewayControlStore
+from explabs.gateway.cost_annotation import CostRegistry, UsageCostAnnotator
 from explabs.gateway.db import GatewayDatabase
 from explabs.gateway.lease_shadow import LeaseShadow, PostgresLeaseStateReader
 from explabs.gateway.ledger import PostgresAttemptLedger
@@ -123,7 +124,7 @@ DEFAULT_READY_FILE = "/tmp/explabs-gateway-worker-ready"  # noqa: S108
 _READY_PING_CONNECT_TIMEOUT_SECONDS = 3
 
 # The startup path (presence heartbeat through the pool, first catalog build)
-# is the only path that opens a fresh direct connection before uvicorn binds.
+# is the only path that opens a fresh Postgres connection before uvicorn binds.
 # Bound it so an unreachable database fails startup in seconds with the psycopg
 # error logged, instead of hanging pre-bind and starving the readiness probe.
 _STARTUP_CONNECT_TIMEOUT_SECONDS = 10
@@ -823,6 +824,9 @@ class GatewayWorkerRuntime:
     ping: Callable[[], bool]
     continuations: PostgresContinuationStore | None = None
     native_components: HostedNativeGatewayComponents | None = None
+    # Settled-cost handoff from the ledger to the response annotator; None
+    # only in tests that compose a runtime without the annotation seam.
+    cost_registry: CostRegistry | None = None
     _phase: GatewayWorkerPhase = field(default=GatewayWorkerPhase.STARTING, init=False)
     _phase_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
     _drain_task: asyncio.Task[bool] | None = field(default=None, init=False, repr=False)
@@ -969,6 +973,9 @@ def compose_gateway_worker_runtime(settings: GatewayWorkerSettings) -> GatewayWo
     lease_shadow = (
         LeaseShadow(PostgresLeaseStateReader(db)) if settings.lease_shadow_enabled else None
     )
+    # Settled billing outcomes ride from the finalizing settle to the response
+    # annotator, which stamps the additive usage.cost on /v1 completions.
+    cost_registry = CostRegistry()
     postgres_ledger = PostgresAttemptLedger(
         db,
         clock=clock,
@@ -976,11 +983,16 @@ def compose_gateway_worker_runtime(settings: GatewayWorkerSettings) -> GatewayWo
         lineage=lineage,
         capture_buffer=capture_buffer,
         capture_writer=capture_writer,
+        cost_registry=cost_registry,
     )
     ledger: AttemptLedger = DispatchLatchShield(postgres_ledger)
     catalog = GatewayCatalogRefresher(
         lambda: psycopg.connect(
-            settings.database_url, connect_timeout=_STARTUP_CONNECT_TIMEOUT_SECONDS
+            settings.database_url,
+            connect_timeout=_STARTUP_CONNECT_TIMEOUT_SECONDS,
+            # Supavisor transaction mode does not preserve one server session
+            # behind this client, so automatic prepared statements are unsafe.
+            prepare_threshold=None,
         ),
     )
     executor = RefreshingGatewayExecutor(
@@ -1030,6 +1042,7 @@ def compose_gateway_worker_runtime(settings: GatewayWorkerSettings) -> GatewayWo
         reconciler=CrashReconciler(db, settings),
         ping=lambda: ping_database(settings.database_url),
         continuations=continuations,
+        cost_registry=cost_registry,
         native_components=HostedNativeGatewayComponents(
             store=control_store,
             ledger=postgres_ledger,
@@ -1223,6 +1236,14 @@ def create_gateway_worker_app(
     # mount is a catch-all, and any route added after it is unreachable.
     register_messages_route(app, owned.service, owned.db)
     app.mount("/", create_gateway_app(owned.service))
+    # Innermost /v1 decoration: settled usage.cost on completion responses
+    # (cost_annotation.py). The exp mount keeps protocol ownership; this
+    # rewrites finished 200 payloads. The models-listing pricing extension
+    # needs no middleware — it publishes through the resolver seam
+    # (OrgAwareRouteResolver.published_metadata), which covers the Rust
+    # plane's native /v1/models callback as well.
+    if owned.cost_registry is not None:
+        app.add_middleware(UsageCostAnnotator, registry=owned.cost_registry)
     # Rewrites the generic insufficient_quota 429 into the verify-your-email
     # message for the OpenAI /v1 lane when the org's founding admin is unverified
     # (the Anthropic lane does its own enrichment inside the adapter). Added

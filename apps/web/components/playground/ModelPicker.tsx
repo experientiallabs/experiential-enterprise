@@ -66,7 +66,6 @@ export function ModelPicker({
   );
 
   const selected = models.find((entry) => entry.model.slug === selectedSlug) ?? null;
-  const selectedProvider = selected === null ? null : primaryProvider(selected);
   const isSearching = query.trim() !== "";
 
   const filtered = useMemo(() => {
@@ -190,7 +189,6 @@ export function ModelPicker({
   }
 
   function renderRow(entry: CatalogEntry) {
-    const provider = primaryProvider(entry);
     const inputMicro = cheapestInputMicro(entry);
     const isActive = entry.model.slug === selectedSlug;
     const recommended = entry.model.preferred_rank !== null;
@@ -218,14 +216,15 @@ export function ModelPicker({
         {recommended ? (
           <Star aria-hidden className="shrink-0 fill-accent-amber text-accent-amber" size={12} />
         ) : null}
-        {provider !== null ? <ProviderBadge provider={provider} /> : null}
+        {/* No per-row provider tag: rows already sit under their provider
+            group, and the picker reads as model names only (the product owner). */}
         <span className="min-w-0 flex-1 truncate font-medium text-ink">
           {entry.model.display_name}
         </span>
         {byok ? (
           <span
             className="shrink-0 rounded-full bg-warning-soft px-1.5 py-px font-mono text-[9.5px] uppercase tracking-wide text-warning"
-            title="Requires your own provider key — not hosted on Experiential credits"
+            title="Requires your own provider key, not hosted on Experiential credits"
           >
             your key
           </span>
@@ -257,10 +256,9 @@ export function ModelPicker({
       >
         <span className="flex min-w-0 items-center gap-2">
           {selected ? (
-            <>
-              {selectedProvider !== null ? <ProviderBadge provider={selectedProvider} /> : null}
-              <span className="truncate font-semibold">{selected.model.display_name}</span>
-            </>
+            // Just the model name; the provider tag was cut so panes and the
+            // trigger read as model names only (the product owner).
+            <span className="truncate font-semibold">{selected.model.display_name}</span>
           ) : (
             <span className="text-muted">{triggerLabel}</span>
           )}

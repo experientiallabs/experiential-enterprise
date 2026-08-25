@@ -93,7 +93,7 @@ export function QuickstartCard({
           data-testid="quickstart-byok-notice"
         >
           This model isn&apos;t hosted on Experiential credits. The gateway call below works only
-          after you connect your own provider key for it — add one under &quot;Ways to use&quot;.
+          after you connect your own provider key for it, add one under &quot;Ways to use&quot;.
         </p>
       ) : null}
 

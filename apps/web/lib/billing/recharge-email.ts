@@ -73,7 +73,7 @@ function rechargeEmailHtml({
   return [
     `<div style="font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #171717;">`,
     `<h2 style="font-size: 18px; font-weight: 600;">We topped up your credits</h2>`,
-    `<p style="font-size: 14px; line-height: 1.6;">Your <strong>${orgName}</strong> balance ran low, so we added <strong>${amount}</strong> to your saved card, the way you asked us to. Nothing to do — your serving kept running.</p>`,
+    `<p style="font-size: 14px; line-height: 1.6;">Your <strong>${orgName}</strong> balance ran low, so we added <strong>${amount}</strong> to your saved card, the way you asked us to. Nothing to do, your serving kept running.</p>`,
     `<p style="font-size: 14px; line-height: 1.6;">New balance: <strong>${balance}</strong>.</p>`,
     `<p style="margin: 24px 0;"><a href="${creditsUrl}" style="background: #171717; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 9999px; font-size: 14px; font-weight: 600;">View credits</a></p>`,
     `<p style="font-size: 12px; color: #737373; line-height: 1.6;">You can change the recharge amount, the trigger, or turn auto-recharge off any time from the credits page.</p>`,

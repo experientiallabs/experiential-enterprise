@@ -14,7 +14,7 @@ describe("buildFirstCallPrompt", () => {
     expect(prompt).toContain("EXPLABS_API_KEY=xpl_livekey");
     expect(prompt).toContain("GET https://api.example/v1/models");
     expect(prompt).toContain('base_url="https://api.example/v1"');
-    expect(prompt).toContain("qwen3.5-9b");
+    expect(prompt).toContain("qwen3.8-27b");
   });
 
   it("reads the key from the env and uses the discovered model id, not a literal", () => {
@@ -22,7 +22,7 @@ describe("buildFirstCallPrompt", () => {
     expect(prompt).toContain('os.environ["EXPLABS_API_KEY"]');
     expect(prompt).not.toContain('api_key="$EXPLABS_API_KEY"');
     // The OpenAI example must use the id chosen during discovery, not hard-code.
-    expect(prompt).toContain('model="<the smallest Qwen id from step 1>"');
+    expect(prompt).toContain('model="<the promo Qwen id from step 1>"');
   });
 
   it("offers the Anthropic lane with the no-/v1 base URL and its text-only caveat", () => {

@@ -84,11 +84,9 @@ function renderGated(isAuthenticated: boolean, action = vi.fn()) {
 }
 
 async function loginThroughModal() {
-  // Emailed-code flow: the trial form defaults to password mode, so switch
-  // first; then enter email -> Continue sends the code -> enter it -> Sign in.
-  // A returning login (verify created:false) runs the pending action and
-  // closes without a celebration.
-  fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
+  // Passwordless email-code flow: enter email -> Continue sends the code ->
+  // enter it -> Sign in. A returning login (verify created:false) runs the
+  // pending action and closes without a celebration.
   fireEvent.change(screen.getByLabelText("Email"), { target: { value: "a@b.co" } });
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   const codeInput = await screen.findByLabelText("Sign-in code");
@@ -166,7 +164,6 @@ describe("useLoginModal / requireAuth", () => {
     renderGated(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
-    fireEvent.click(screen.getByRole("button", { name: "Sign in with email code" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@b.co" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     const codeInput = await screen.findByLabelText("Sign-in code");
@@ -180,16 +177,19 @@ describe("useLoginModal / requireAuth", () => {
     expect(await screen.findByTestId("welcome-credits-line")).toHaveTextContent("$20");
   });
 
-  it("never dead-ends the password 401: the modal offers the emailed-code signup path", async () => {
+  it("never dead-ends the password 401: the modal offers the no_account create path", async () => {
     // the product owner hit this live: an email with no account, tried in the modal's
-    // password mode, ended at "Invalid email or password." with nowhere to go.
-    // The modal hosts the SAME AuthForm as /signin, so the rejection must offer
-    // the emailed-code flow — which creates the account on first use — and a
-    // created account still gets the first-key celebration.
+    // password mode, ended at a dead-end message with nowhere to go. The modal
+    // hosts the SAME AuthForm as /signin, so a no_account 401 must reveal the
+    // Create-an-account affordance into the emailed-code flow (which creates the
+    // account on first use), and a created account still gets the first-key
+    // celebration. This is the light-tone (modal) render of the same branch.
     const fetchMock = vi.fn((input: RequestInfo | URL) => {
       const url = String(input);
       if (url === "/auth/password/signin") {
-        return Promise.resolve(jsonResponse(401, { error: "Invalid email or password." }));
+        return Promise.resolve(
+          jsonResponse(401, { code: "no_account", error: "No account found for that email." })
+        );
       }
       if (url === "/auth/otp") {
         return Promise.resolve(jsonResponse(200, { ok: true }));
@@ -217,11 +217,12 @@ describe("useLoginModal / requireAuth", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "noacct@b.co" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in with password" }));
     fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "guess1234" } });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText("Invalid email or password.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Email me a sign-in code" }));
+    expect(await screen.findByRole("button", { name: "Create an account" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create an account" }));
 
     const codeInput = await screen.findByLabelText("Sign-in code");
     fireEvent.change(codeInput, { target: { value: "123456" } });

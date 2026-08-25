@@ -157,6 +157,52 @@ describe("catalog Promotional table section", () => {
     render(<CatalogTable entries={entries} promotions={promotions} />);
     // Qwen is Recommended (open by default), so it is visible twice at once.
     expect(screen.getAllByText("Qwen3.8 27B")).toHaveLength(2);
+    // The Recommended band is additive: the same model still lists under its
+    // own (collapsed by default) family fold.
+    fireEvent.click(headerByText("Qwen"));
+    expect(screen.getAllByText("Qwen3.8 27B")).toHaveLength(3);
+  });
+
+  it("keeps recommended models listed in their family fold (GPT-5.6 Sol/Luna regression)", () => {
+    // Prod shape from 2026-08-24: Sol/Luna are starred AND in a free promo;
+    // Terra only rides a family-scoped percent promo. The old band partition
+    // MOVED starred models out of their family, so the GPT fold showed Terra
+    // but not Sol/Luna. Rails must overlay, never subtract.
+    const rows = [
+      makeEntry({ id: "m-sol", slug: "gpt-5.6-sol", display_name: "GPT-5.6 Sol", preferred_rank: 1 }),
+      makeEntry({ id: "m-luna2", slug: "gpt-5.6-luna", display_name: "GPT-5.6 Luna", preferred_rank: 2 }),
+      makeEntry({ id: "m-terra", slug: "gpt-5.6-terra", display_name: "GPT-5.6 Terra" })
+    ];
+    const promos: ModelPromotion[] = [
+      {
+        label: "Founders free",
+        slugs: ["gpt-5.6-sol", "gpt-5.6-luna"],
+        display_order: 0,
+        free: true,
+        percent_off: 0,
+        providers: [],
+        family_keys: []
+      },
+      {
+        label: "GPT half off",
+        slugs: [],
+        display_order: 1,
+        free: false,
+        percent_off: 50,
+        providers: [],
+        family_keys: ["openai"]
+      }
+    ];
+    render(<CatalogTable entries={rows} promotions={promos} />);
+    // Sol renders in Promotional and Recommended (both open); its family fold
+    // is collapsed, so no third instance yet. Terra has no rail membership and
+    // stays hidden until the fold opens.
+    expect(screen.getAllByText("GPT-5.6 Sol")).toHaveLength(2);
+    expect(screen.queryByText("GPT-5.6 Terra")).toBeNull();
+    fireEvent.click(headerByText("GPT"));
+    expect(screen.getAllByText("GPT-5.6 Sol")).toHaveLength(3);
+    expect(screen.getAllByText("GPT-5.6 Luna")).toHaveLength(3);
+    expect(screen.getAllByText("GPT-5.6 Terra")).toHaveLength(1);
   });
 
   it("puts a FREE chip on free-promo models in every section they appear in", () => {
@@ -258,6 +304,15 @@ describe("catalog Promotional table section", () => {
       />
     );
     expect(screen.queryByTestId("promotional-section")).not.toBeInTheDocument();
+  });
+
+  it("prices a promoted row as list-price struck through beside the effective price", () => {
+    const { container } = render(<CatalogTable entries={entries} promotions={promotions} />);
+    const struck = [...container.querySelectorAll('[data-testid="promo-price"]')];
+    // Every promoted, priced row carries the crossed-out list price; a free
+    // promo's effective price is $0 (only ever the PROMO price, never unknown).
+    expect(struck.length).toBeGreaterThan(0);
+    expect(struck.some((node) => node.querySelector("s") !== null)).toBe(true);
   });
 });
 

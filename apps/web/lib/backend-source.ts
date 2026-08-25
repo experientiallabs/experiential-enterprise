@@ -19,7 +19,11 @@ import type {
   ProviderPolicyInput,
   ProviderPolicyState
 } from "./data-controls";
-import { type OrgEntitlement, type OrgEntitlementsList } from "./entitlements";
+import {
+  type DeploymentEntitlement,
+  type OrgEntitlement,
+  type OrgEntitlementsList
+} from "./entitlements";
 import { DataSourceNotFoundError, DataSourceRequestError } from "./errors";
 import type {
   GatewayDailyUsage,
@@ -490,6 +494,10 @@ export class BackendDataSource {
   // Enterprise entitlements (the hosted tier of the capability registry):
   // platform operators grant/revoke /ee capabilities per org. All three
   // proxy to platform-admin-gated backend routes.
+
+  async listAllOrgEntitlements(): Promise<{ entitlements: DeploymentEntitlement[] }> {
+    return this.fetchJson<{ entitlements: DeploymentEntitlement[] }>("/api/admin/entitlements");
+  }
 
   async listOrgEntitlements(orgId: string): Promise<OrgEntitlementsList> {
     return this.fetchJson<OrgEntitlementsList>(

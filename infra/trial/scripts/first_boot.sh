@@ -9,7 +9,7 @@
 #      written only when missing (the JWT secret is baked into the db volume,
 #      so re-minting on a later boot would break every stored credential).
 #   2. scripts/integration_stack.sh up: prebuilt mode pulls the published
-#      trial-api/trial-web images; build-from-source mode lets the wrapper
+#      experiential-api/experiential-web images; build-from-source mode lets the wrapper
 #      build the api and web images. NEVER reset: reset destroys the db and
 #      storage volumes.
 #   3. Wait for api /health, web /api/health, and the gateway worker's

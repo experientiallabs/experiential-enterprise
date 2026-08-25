@@ -214,7 +214,7 @@ export function OrgApiKeysSection({ orgId, canManage, identityId = null }: OrgAp
         <div className="flex items-center justify-between gap-3 border border-line-strong rounded-lg bg-surface p-[18px]">
           <div className="min-w-0">
             <p className="m-0 mb-1 text-[13px] font-semibold text-ink">
-              Copy your key now — it is shown only once.
+              Copy your key now. It is shown only once.
             </p>
             <code className="block overflow-x-auto whitespace-nowrap font-mono text-[13px]">
               {mintedSecret}
@@ -222,7 +222,7 @@ export function OrgApiKeysSection({ orgId, canManage, identityId = null }: OrgAp
             {rotatedFromExpiry !== null && (
               <p className="m-0 mt-2 text-[12px] text-muted">
                 The previous key keeps working until{" "}
-                <LocalDateTime value={rotatedFromExpiry} withYear /> — switch your services over
+                <LocalDateTime value={rotatedFromExpiry} withYear />, switch your services over
                 before then.
               </p>
             )}
@@ -274,7 +274,7 @@ export function OrgApiKeysSection({ orgId, canManage, identityId = null }: OrgAp
           <div className="flex items-center gap-3 p-[18px] text-muted text-[13px]">
             <KeyRound aria-hidden size={16} strokeWidth={1.8} />
             {showRevoked ? "No API keys yet" : "No active API keys"}
-            {canManage ? " — create one to call the endpoints." : "."}
+            {canManage ? ", create one to call the endpoints." : "."}
           </div>
         ) : (
           <table className="w-full border-collapse text-[13px]">

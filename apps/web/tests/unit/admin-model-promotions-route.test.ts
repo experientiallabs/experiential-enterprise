@@ -7,7 +7,10 @@ const createAdminModelPromotion = vi.hoisted(() => vi.fn());
 const updateAdminModelPromotion = vi.hoisted(() => vi.fn());
 const deleteAdminModelPromotion = vi.hoisted(() => vi.fn());
 
+const revalidateModelsCatalog = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/auth/admin", () => ({ isPlatformAdmin }));
+vi.mock("@/lib/models-catalog/server", () => ({ revalidateModelsCatalog }));
 vi.mock("@/lib/data-source", async () => {
   const actual = await vi.importActual<typeof import("@/lib/data-source")>("@/lib/data-source");
   return {
@@ -177,6 +180,16 @@ describe("the admin model-promotions routes", () => {
     const response = await DELETE(deleteRequest(), idContext);
     expect(response.status).toBe(200);
     expect(deleteAdminModelPromotion).toHaveBeenCalledWith(PROMO_ID);
+  });
+
+  it("busts the shared catalog cache on create, update, and delete but never on a rejected body", async () => {
+    await POST(postRequest(CREATE_BODY));
+    await PUT(putRequest({ ...CREATE_BODY, percent_off: 40 }), idContext);
+    await DELETE(deleteRequest(), idContext);
+    expect(revalidateModelsCatalog).toHaveBeenCalledTimes(3);
+    revalidateModelsCatalog.mockClear();
+    await POST(postRequest({ ...CREATE_BODY, label: "" }));
+    expect(revalidateModelsCatalog).not.toHaveBeenCalled();
   });
 
   it("refuses to delete for a non-admin", async () => {
